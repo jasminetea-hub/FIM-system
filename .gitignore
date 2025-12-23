@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Production
+dist/
+build/
+
+# Database
+database.db
+*.db
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+logs/
+

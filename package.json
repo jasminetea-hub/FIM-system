@@ -1,0 +1,41 @@
+{
+  "name": "web-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "server": "node server.js",
+    "server:r": "node server_r_model.js",
+    "server:dev": "nodemon server.js",
+    "server:r:dev": "nodemon server_r_model.js",
+    "start": "npm run build && node server.js",
+    "start:r": "npm run build && node server_r_model.js",
+    "init-db": "node scripts/initDatabase.js",
+    "add-data": "node scripts/addData.js",
+    "view-db": "node scripts/viewDatabase.js",
+    "view-predictions": "node scripts/viewPredictions.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.6.2",
+    "cors": "^2.8.5",
+    "encoding-japanese": "^2.2.0",
+    "express": "^5.2.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.10.1",
+    "recharts": "^3.5.1",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react-swc": "^4.2.2",
+    "nodemon": "^3.1.11",
+    "vite": "^7.2.6"
+  }
+}

@@ -1,0 +1,36 @@
+# さくらのインターネット用 .htaccess 設定例
+# このファイルを .htaccess としてアップロードしてください
+
+# RewriteEngineを有効化
+RewriteEngine On
+
+# 静的ファイル（画像、CSS、JSなど）は直接配信
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# APIリクエストをNode.jsサーバーにプロキシ
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteRule ^api/(.*)$ http://localhost:3001/api/$1 [P,L]
+
+# その他のリクエストもNode.jsサーバーにプロキシ
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ http://localhost:3001/$1 [P,L]
+
+# セキュリティヘッダー（オプション）
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# キャッシュ設定（オプション）
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+</IfModule>
+

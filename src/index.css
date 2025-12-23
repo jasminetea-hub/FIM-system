@@ -1,0 +1,373 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  background: #e5e5e5;
+  color: #111827;
+}
+
+.app-root {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 24px 12px;
+}
+
+.app-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+  overflow: hidden;
+}
+
+.app-header {
+  background: linear-gradient(135deg, #111827, #1f2937);
+  padding: 18px 18px 16px;
+  text-align: center;
+  color: #f9fafb;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: 0.08em;
+}
+
+.app-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  opacity: 0.9;
+  font-weight: normal;
+}
+
+.app-form {
+  padding: 18px 20px 24px;
+}
+
+.form-section + .form-section {
+  margin-top: 20px;
+  border-top: 1px dashed #e5e7eb;
+  padding-top: 16px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.section-description {
+  font-size: 11px;
+  color: #6b7280;
+  margin: 0 0 8px;
+}
+
+.form-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.form-label {
+  flex: 0 0 42%;
+  font-size: 13px;
+}
+
+.input-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 9px 12px;
+  font-size: 13px;
+  color: #000000;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background-color: #ffffff;
+  appearance: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+select.is-empty {
+  color: #9ca3af;
+}
+
+input::placeholder {
+  color: #9ca3af;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.25);
+  background-color: #eff6ff;
+}
+
+.select-wrapper select {
+  padding-right: 30px;
+}
+
+.select-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  pointer-events: none;
+  color: #4b5563;
+}
+
+.form-footer {
+  margin-top: 28px;
+  display: flex;
+  justify-content: center;
+}
+
+.primary-button {
+  min-width: 140px;
+  padding: 11px 32px;
+  border-radius: 999px;
+  border: none;
+  background-color: #111827;
+  color: #ffffff;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.35);
+  transition: transform 0.12s ease, box-shadow 0.12s ease,
+    background-color 0.12s ease;
+}
+
+.primary-button:hover {
+  background-color: #020617;
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.45);
+}
+
+/* 表示切り替えボタン */
+.view-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  padding: 10px 16px 4px;
+  background-color: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.view-toggle::before {
+  content: '表示モード';
+  font-size: 11px;
+  color: #6b7280;
+  margin-right: 8px;
+  align-self: center;
+}
+
+.toggle-button {
+  padding: 7px 14px;
+  min-width: 80px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background-color: #ffffff;
+  font-size: 12px;
+  cursor: pointer;
+  color: #4b5563;
+  transition: background-color 0.15s ease, color 0.15s ease,
+    border-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.toggle-button:first-of-type {
+  border-radius: 999px 0 0 999px;
+}
+
+.toggle-button:last-of-type {
+  border-radius: 0 999px 999px 0;
+  border-left: none;
+}
+
+.toggle-button.is-active {
+  background-color: #111827;
+  color: #ffffff;
+  border-color: #111827;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.25);
+}
+
+/* モード別レイアウト */
+.app-root--mobile .app-card {
+  max-width: 420px;
+}
+
+.app-root--pc .app-card {
+  /* PC表示時: 画面幅に応じて拡大縮小（最大 1400px / 画面の94%） */
+  max-width: min(1400px, 94vw);
+}
+
+@media (max-width: 767px) {
+  /* 画面自体が狭いときはスマホレイアウトを優先 */
+  .app-root--pc .app-card {
+    max-width: 420px;
+  }
+}
+
+@media (min-width: 768px) {
+  .app-root {
+    align-items: center;
+  }
+
+  .form-label {
+    flex-basis: 30%;
+    font-size: 14px;
+  }
+
+  .app-form {
+    padding: 24px 32px 32px;
+  }
+}
+
+/* 結果表示セクション */
+.result-section {
+  padding: 20px;
+  background-color: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.result-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: #111827;
+}
+
+.close-button,
+.back-button {
+  background: #111827;
+  border: none;
+  font-size: 14px;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+  font-weight: 500;
+}
+
+.close-button:hover,
+.back-button:hover {
+  background-color: #020617;
+  transform: translateY(-1px);
+}
+
+.result-content {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* レーダーチャート */
+.radar-chart-container {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.radar-chart-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px;
+  color: #111827;
+  text-align: center;
+}
+
+/* 合計点比較表 */
+.total-score-table-container {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.total-score-table-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px;
+  color: #111827;
+  text-align: center;
+}
+
+.total-score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.total-score-table th,
+.total-score-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.total-score-table th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+  color: #111827;
+}
+
+.total-score-table td {
+  color: #374151;
+}
+
+.total-score-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.total-score-table td.positive {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.total-score-table td.negative {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.primary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (min-width: 768px) {
+  .result-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .total-score-table-container {
+    grid-column: 1 / -1;
+  }
+}

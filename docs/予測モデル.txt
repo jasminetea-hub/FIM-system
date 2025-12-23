@@ -1,0 +1,996 @@
+11月2日コードバックアップ（完成）
+library(tidyverse)
+library(caret)
+library(skimr)
+#欠損値処理
+alldata <- read_csv("alldata_305.csv")
+skim(alldata)
+all_data_clean <- na.omit(alldata)
+skim(all_data_clean)
+write.csv(all_data_clean, "all_data_clean_304.csv", row.names = FALSE, fileEncoding = "CP932")
+#データランダム分割処理
+total_data <- read_csv("all_data_clean_304.csv", 
+                       locale = locale(encoding = "cp932"))
+total_data %>% glimpse()
+#sample関数でランダムにデータを分割
+#304名中の7割の213人をランダムに選択、残りの91人をテストデータへ
+set.seed(123)
+train_sample <- sample(304,213)
+train_data <- total_data[train_sample, ]
+test_data <- total_data[-train_sample, ]
+train_data %>% glimpse()
+summary(train_data)
+summary(test_data)
+write.csv(train_data, file = "train_data_FIM_all.csv", row.names = FALSE, fileEncoding = "CP932")
+write.csv(test_data, file = "test_data_FIM_all.csv", row.names = FALSE, fileEncoding = "CP932")
+#日本語文字化けしないようにCP932で出力、改めてIDつける必要ないためrow.namesをFALSEにする
+#FIM総得点で機械学習していく
+train_data_all_FIM <- read_csv("train_data_all_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_all_FIM %>% glimpse()
+skim(train_data_all_FIM)
+rf_model_all_FIM <- train(退院時FIM総得点 ~ ., 
+                         data = train_data_all_FIM, 
+                         method = "rf", 
+                         trControl = trainControl(method = "repeatedcv", 
+                                                  number = 10, 
+                                                  repeats = 3))
+#学習データモデルの結果
+rf_model_all_FIM
+rf_model_all_FIM$results
+rf_model_all_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_all_FIM <- varImp(rf_model_all_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_all_FIM <- as.data.frame(importance_data_all_FIM$importance)
+importance_df_all_FIM$Feature <- rownames(importance_df_all_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_all_FIM)
+write.csv(importance_df_all_FIM, file = "importance_all_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_all_FIM <- read_csv("test_data_all_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_all_FIM %>% glimpse()
+skim(test_data_all_FIM)
+#予測
+prediction_all_FIM <- predict(rf_model_all_FIM, test_data_all_FIM)
+prediction_all_FIM
+RMSE(prediction_all_FIM, test_data_all_FIM$退院時FIM総得点)
+MAE(prediction_all_FIM, test_data_all_FIM$退院時FIM総得点)
+R2(pred = prediction_all_FIM, obs = test_data_all_FIM$退院時FIM総得点)
+#予測した数値をcsvに入れて書き出す
+test_data_all_FIM_pre <- read_csv("test_data_all_FIM_pre.csv",locale = locale(encoding = "cp932"))
+test_data_all_FIM_pre$pre <- prediction_all_FIM
+write.csv(test_data_all_FIM_pre, file = "test_data_all_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_all_FIM_pre <- predict(rf_model_all_FIM, train_data_all_FIM)
+prediction_all_FIM_pre
+train_data_all_FIM_pre <- read_csv("train_data_all_FIM_pre.csv",locale = locale(encoding = "cp932"))
+train_data_all_FIM_pre$pre <- prediction_all_FIM_pre
+write.csv(train_data_all_FIM_pre, file = "train_data_all_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_all_FIM <- median(abs(train_data_all_FIM_pre$退院時FIM総得点 - train_data_all_FIM_pre$pre))
+medae_train_all_FIM
+#テストデータの中央値誤差を計算する
+medae_test_all_FIM <- median(abs(test_data_all_FIM_pre$退院時FIM総得点 - test_data_all_FIM_pre$pre))
+medae_test_all_FIM
+#運動FIM合計点で機械学習していく
+train_data_motor_FIM <- read_csv("train_data_motor_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_motor_FIM %>% glimpse()
+skim(train_data_motor_FIM)
+rf_model_motor_FIM <- train(退院時FIM運動項目合計 ~ ., 
+                            data = train_data_motor_FIM, 
+                            method = "rf", 
+                            trControl = trainControl(method = "repeatedcv", 
+                                                     number = 10, 
+                                                     repeats = 3))
+#学習データモデルの結果
+rf_model_motor_FIM
+rf_model_motor_FIM$results
+rf_model_motor_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_motor_FIM <- varImp(rf_model_motor_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_motor_FIM <- as.data.frame(importance_data_motor_FIM$importance)
+importance_df_motor_FIM$Feature <- rownames(importance_df_motor_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_motor_FIM)
+write.csv(importance_df_motor_FIM, file = "importance_motor_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_motor_FIM <- read_csv("test_data_motor_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_motor_FIM %>% glimpse()
+skim(test_data_motor_FIM)
+#予測
+prediction_motor_FIM <- predict(rf_model_motor_FIM, test_data_motor_FIM)
+prediction_motor_FIM
+RMSE(prediction_motor_FIM, test_data_motor_FIM$退院時FIM運動項目合計)
+MAE(prediction_motor_FIM, test_data_motor_FIM$退院時FIM運動項目合計)
+R2(pred = prediction_motor_FIM, obs = test_data_motor_FIM$退院時FIM運動項目合計)
+#予測した数値をcsvに入れて書き出す
+test_data_motor_FIM_pre <- read_csv("test_data_motor_FIM_pre.csv",locale = locale(encoding = "cp932"))
+test_data_motor_FIM_pre$pre <- prediction_motor_FIM
+write.csv(test_data_motor_FIM_pre, file = "test_data_motor_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_motor_FIM_pre <- predict(rf_model_motor_FIM, train_data_motor_FIM)
+prediction_motor_FIM_pre
+train_data_motor_FIM_pre <- read_csv("train_data_motor_FIM_pre.csv",locale = locale(encoding = "cp932"))
+train_data_motor_FIM_pre$pre <- prediction_motor_FIM_pre
+write.csv(train_data_motor_FIM_pre, file = "train_data_motor_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_motor_FIM <- median(abs(train_data_motor_FIM_pre$退院時FIM運動項目合計 - train_data_motor_FIM_pre$pre))
+medae_train_motor_FIM
+#テストデータの中央値誤差を計算する
+medae_test_motor_FIM <- median(abs(test_data_motor_FIM_pre$退院時FIM運動項目合計 - test_data_motor_FIM_pre$pre))
+medae_test_motor_FIM
+#認知FIM合計点で機械学習していく
+train_data_cog_FIM <- read_csv("train_data_cog_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_cog_FIM %>% glimpse()
+skim(train_data_cog_FIM)
+rf_model_cog_FIM <- train(退院時FIM認知項目合計 ~ ., 
+                          data = train_data_cog_FIM, 
+                          method = "rf", 
+                          trControl = trainControl(method = "repeatedcv", 
+                                                   number = 10, 
+                                                   repeats = 3))
+#学習データモデルの結果
+rf_model_cog_FIM
+rf_model_cog_FIM$results
+rf_model_cog_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_cog_FIM <- varImp(rf_model_cog_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_cog_FIM <- as.data.frame(importance_data_cog_FIM$importance)
+importance_df_cog_FIM$Feature <- rownames(importance_df_cog_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_cog_FIM)
+write.csv(importance_df_cog_FIM, file = "importance_cog_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_cog_FIM <- read_csv("test_data_cog_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_cog_FIM %>% glimpse()
+skim(test_data_cog_FIM)
+#予測
+prediction_cog_FIM <- predict(rf_model_cog_FIM, test_data_cog_FIM)
+prediction_cog_FIM
+RMSE(prediction_cog_FIM, test_data_cog_FIM$退院時FIM認知項目合計)
+MAE(prediction_cog_FIM, test_data_cog_FIM$退院時FIM認知項目合計)
+R2(pred = prediction_cog_FIM, obs = test_data_cog_FIM$退院時FIM認知項目合計)
+#予測した数値をcsvに入れて書き出す
+test_data_cog_FIM$pre <- prediction_cog_FIM
+write.csv(test_data_cog_FIM, file = "test_data_cog_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_cog_FIM_pre <- predict(rf_model_cog_FIM, train_data_cog_FIM)
+prediction_cog_FIM_pre
+train_data_cog_FIM$pre <- prediction_cog_FIM_pre
+write.csv(train_data_cog_FIM, file = "train_data_cog_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_cog_FIM <- median(abs(train_data_cog_FIM$退院時FIM認知項目合計 - train_data_cog_FIM$pre))
+medae_train_cog_FIM
+#テストデータの中央値誤差を計算する
+medae_test_cog_FIM <- median(abs(test_data_cog_FIM$退院時FIM認知項目合計 - test_data_cog_FIM$pre))
+medae_test_cog_FIM
+#食事で機械学習していく
+train_data_eat_FIM <- read_csv("train_data_eat_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_eat_FIM %>% glimpse()
+skim(train_data_eat_FIM)
+rf_model_eat_FIM <- train(退院時FIM食事 ~ ., 
+                          data = train_data_eat_FIM, 
+                          method = "rf", 
+                          trControl = trainControl(method = "repeatedcv", 
+                                                   number = 10, 
+                                                   repeats = 3))
+#学習データモデルの結果
+rf_model_eat_FIM
+rf_model_eat_FIM$results
+rf_model_eat_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_eat_FIM <- varImp(rf_model_eat_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_eat_FIM <- as.data.frame(importance_data_eat_FIM$importance)
+importance_df_eat_FIM$Feature <- rownames(importance_df_eat_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_eat_FIM)
+write.csv(importance_df_eat_FIM, file = "importance_eat_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_eat_FIM <- read_csv("test_data_eat_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_eat_FIM %>% glimpse()
+skim(test_data_eat_FIM)
+#予測
+prediction_eat_FIM <- predict(rf_model_eat_FIM, test_data_eat_FIM)
+prediction_eat_FIM
+RMSE(prediction_eat_FIM, test_data_eat_FIM$退院時FIM食事)
+MAE(prediction_eat_FIM, test_data_eat_FIM$退院時FIM食事)
+R2(pred = prediction_eat_FIM, obs = test_data_eat_FIM$退院時FIM食事)
+#予測した数値をcsvに入れて書き出す
+test_data_eat_FIM$pre <- prediction_eat_FIM
+write.csv(test_data_eat_FIM, file = "test_data_eat_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_eat_FIM_pre <- predict(rf_model_eat_FIM, train_data_eat_FIM)
+prediction_eat_FIM_pre
+train_data_eat_FIM$pre <- prediction_eat_FIM_pre
+write.csv(train_data_eat_FIM, file = "train_data_eat_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_eat_FIM <- median(abs(train_data_eat_FIM$退院時FIM食事 - train_data_eat_FIM$pre))
+medae_train_eat_FIM
+#テストデータの中央値誤差を計算する
+medae_test_eat_FIM <- median(abs(test_data_eat_FIM$退院時FIM食事 - test_data_eat_FIM$pre))
+medae_test_eat_FIM
+#整容で機械学習していく
+train_data_groom_FIM <- read_csv("train_data_groom_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_groom_FIM %>% glimpse()
+skim(train_data_groom_FIM)
+rf_model_groom_FIM <- train(退院時FIM整容 ~ ., 
+                            data = train_data_groom_FIM, 
+                            method = "rf", 
+                            trControl = trainControl(method = "repeatedcv", 
+                                                     number = 10, 
+                                                     repeats = 3))
+#学習データモデルの結果
+rf_model_groom_FIM
+rf_model_groom_FIM$results
+rf_model_groom_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_groom_FIM <- varImp(rf_model_groom_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_groom_FIM <- as.data.frame(importance_data_groom_FIM$importance)
+importance_df_groom_FIM$Feature <- rownames(importance_df_groom_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_groom_FIM)
+write.csv(importance_df_groom_FIM, file = "importance_groom_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_groom_FIM <- read_csv("test_data_groom_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_groom_FIM %>% glimpse()
+skim(test_data_groom_FIM)
+#予測
+prediction_groom_FIM <- predict(rf_model_groom_FIM, test_data_groom_FIM)
+prediction_groom_FIM
+RMSE(prediction_groom_FIM, test_data_groom_FIM$退院時FIM整容)
+MAE(prediction_groom_FIM, test_data_groom_FIM$退院時FIM整容)
+R2(pred = prediction_groom_FIM, obs = test_data_groom_FIM$退院時FIM整容)
+#予測した数値をcsvに入れて書き出す
+test_data_groom_FIM$pre <- prediction_groom_FIM
+write.csv(test_data_groom_FIM, file = "test_data_groom_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_groom_FIM_pre <- predict(rf_model_groom_FIM, train_data_groom_FIM)
+prediction_groom_FIM_pre
+train_data_groom_FIM$pre <- prediction_groom_FIM_pre
+write.csv(train_data_groom_FIM, file = "train_data_groom_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_groom_FIM <- median(abs(train_data_groom_FIM$退院時FIM整容 - train_data_groom_FIM$pre))
+medae_train_groom_FIM
+#テストデータの中央値誤差を計算する
+medae_test_groom_FIM <-median(abs(test_data_groom_FIM$退院時FIM整容 - test_data_groom_FIM$pre))
+medae_test_groom_FIM
+#清拭で機械学習していく
+train_data_bath_FIM <- read_csv("train_data_bath_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_bath_FIM %>% glimpse()
+skim(train_data_bath_FIM)
+rf_model_bath_FIM <- train(退院時FIM清拭 ~ ., 
+                           data = train_data_bath_FIM, 
+                           method = "rf", 
+                           trControl = trainControl(method = "repeatedcv", 
+                                                    number = 10, 
+                                                    repeats = 3))
+#学習データモデルの結果
+rf_model_bath_FIM
+rf_model_bath_FIM$results
+rf_model_bath_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_bath_FIM <- varImp(rf_model_bath_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_bath_FIM <- as.data.frame(importance_data_bath_FIM$importance)
+importance_df_bath_FIM$Feature <- rownames(importance_df_bath_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_bath_FIM)
+write.csv(importance_df_bath_FIM, file = "importance_bath_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_bath_FIM <- read_csv("test_data_bath_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_bath_FIM %>% glimpse()
+skim(test_data_bath_FIM)
+#予測
+prediction_bath_FIM <- predict(rf_model_bath_FIM, test_data_bath_FIM)
+prediction_bath_FIM
+RMSE(prediction_bath_FIM, test_data_bath_FIM$退院時FIM清拭)
+MAE(prediction_bath_FIM, test_data_bath_FIM$退院時FIM清拭)
+R2(pred = prediction_bath_FIM, obs = test_data_bath_FIM$退院時FIM清拭)
+#予測した数値をcsvに入れて書き出す
+test_data_bath_FIM$pre <- prediction_bath_FIM
+write.csv(test_data_bath_FIM, file = "test_data_bath_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_bath_FIM_pre <- predict(rf_model_bath_FIM, train_data_bath_FIM)
+prediction_bath_FIM_pre
+train_data_bath_FIM$pre <- prediction_bath_FIM_pre
+write.csv(train_data_bath_FIM, file = "train_data_bath_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_bath_FIM <- median(abs(train_data_bath_FIM$退院時FIM清拭 - train_data_bath_FIM$pre))
+medae_train_bath_FIM
+#テストデータの中央値誤差を計算する
+medae_test_bath_FIM <-median(abs(test_data_bath_FIM$退院時FIM清拭 - test_data_bath_FIM$pre))
+medae_test_bath_FIM
+#更衣上半身で機械学習していく
+train_data_dress_up_FIM <- read_csv("train_data_dress_up_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_dress_up_FIM %>% glimpse()
+skim(train_data_dress_up_FIM)
+rf_model_dress_up_FIM <- train(退院時FIM更衣上半身 ~ ., 
+                               data = train_data_dress_up_FIM, 
+                               method = "rf", 
+                               trControl = trainControl(method = "repeatedcv", 
+                                                        number = 10, 
+                                                        repeats = 3))
+#学習データモデルの結果
+rf_model_dress_up_FIM
+rf_model_dress_up_FIM$results
+rf_model_dress_up_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_dress_up_FIM <- varImp(rf_model_dress_up_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_dress_up_FIM <- as.data.frame(importance_data_dress_up_FIM$importance)
+importance_df_dress_up_FIM$Feature <- rownames(importance_df_dress_up_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_dress_up_FIM)
+write.csv(importance_df_dress_up_FIM, file = "importance_dress_up_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_dress_up_FIM <- read_csv("test_data_dress_up_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_dress_up_FIM %>% glimpse()
+skim(test_data_dress_up_FIM)
+#予測
+prediction_dress_up_FIM <- predict(rf_model_dress_up_FIM, test_data_dress_up_FIM)
+prediction_dress_up_FIM
+RMSE(prediction_dress_up_FIM, test_data_dress_up_FIM$退院時FIM更衣上半身)
+MAE(prediction_dress_up_FIM, test_data_dress_up_FIM$退院時FIM更衣上半身)
+R2(pred = prediction_dress_up_FIM, obs = test_data_dress_up_FIM$退院時FIM更衣上半身)
+#予測した数値をcsvに入れて書き出す
+test_data_dress_up_FIM$pre <- prediction_dress_up_FIM
+write.csv(test_data_dress_up_FIM, file = "test_data_dress_up_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_dress_up_FIM_pre <- predict(rf_model_dress_up_FIM, train_data_dress_up_FIM)
+prediction_dress_up_FIM_pre
+train_data_dress_up_FIM$pre <- prediction_dress_up_FIM_pre
+write.csv(train_data_dress_up_FIM, file = "train_data_dress_up_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_dress_up_FIM <- median(abs(train_data_dress_up_FIM$退院時FIM更衣上半身 - train_data_dress_up_FIM$pre))
+medae_train_dress_up_FIM
+#テストデータの中央値誤差を計算する
+medae_test_dress_up_FIM <-median(abs(test_data_dress_up_FIM$退院時FIM更衣上半身 - test_data_dress_up_FIM$pre))
+medae_test_dress_up_FIM
+#更衣下半身で機械学習していく
+train_data_dress_low_FIM <- read_csv("train_data_dress_low_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_dress_low_FIM %>% glimpse()
+skim(train_data_dress_low_FIM)
+rf_model_dress_low_FIM <- train(退院時FIM更衣下半身 ~ ., 
+                                data = train_data_dress_low_FIM, 
+                                method = "rf", 
+                                trControl = trainControl(method = "repeatedcv", 
+                                                         number = 10, 
+                                                         repeats = 3))
+#学習データモデルの結果
+rf_model_dress_low_FIM
+rf_model_dress_low_FIM$results
+rf_model_dress_low_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_dress_low_FIM <- varImp(rf_model_dress_low_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_dress_low_FIM <- as.data.frame(importance_data_dress_low_FIM$importance)
+importance_df_dress_low_FIM$Feature <- rownames(importance_df_dress_low_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_dress_low_FIM)
+write.csv(importance_df_dress_low_FIM, file = "importance_dress_low_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_dress_low_FIM <- read_csv("test_data_dress_low_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_dress_low_FIM %>% glimpse()
+skim(test_data_dress_low_FIM)
+#予測
+prediction_dress_low_FIM <- predict(rf_model_dress_low_FIM, test_data_dress_low_FIM)
+prediction_dress_low_FIM
+RMSE(prediction_dress_low_FIM, test_data_dress_low_FIM$退院時FIM更衣下半身)
+MAE(prediction_dress_low_FIM, test_data_dress_low_FIM$退院時FIM更衣下半身)
+R2(pred = prediction_dress_low_FIM, obs = test_data_dress_low_FIM$退院時FIM更衣下半身)
+#予測した数値をcsvに入れて書き出す
+test_data_dress_low_FIM$pre <- prediction_dress_low_FIM
+write.csv(test_data_dress_low_FIM, file = "test_data_dress_low_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_dress_low_FIM_pre <- predict(rf_model_dress_low_FIM, train_data_dress_low_FIM)
+prediction_dress_low_FIM_pre
+train_data_dress_low_FIM$pre <- prediction_dress_low_FIM_pre
+write.csv(train_data_dress_low_FIM, file = "train_data_dress_low_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_dress_low_FIM <- median(abs(train_data_dress_low_FIM$退院時FIM更衣下半身 - train_data_dress_low_FIM$pre))
+medae_train_dress_low_FIM
+#テストデータの中央値誤差を計算する
+medae_test_dress_low_FIM <-median(abs(test_data_dress_low_FIM$退院時FIM更衣下半身 - test_data_dress_low_FIM$pre))
+medae_test_dress_low_FIM
+#トイレ動作で機械学習していく
+train_data_toile_FIM <- read_csv("train_data_toile_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_toile_FIM %>% glimpse()
+skim(train_data_toile_FIM)
+rf_model_toile_FIM <- train(退院時FIMトイレ動作 ~ ., 
+                            data = train_data_toile_FIM, 
+                            method = "rf", 
+                            trControl = trainControl(method = "repeatedcv", 
+                                                     number = 10, 
+                                                     repeats = 3))
+#学習データモデルの結果
+rf_model_toile_FIM
+rf_model_toile_FIM$results
+rf_model_toile_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_toile_FIM <- varImp(rf_model_toile_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_toile_FIM <- as.data.frame(importance_data_toile_FIM$importance)
+importance_df_toile_FIM$Feature <- rownames(importance_df_toile_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_toile_FIM)
+write.csv(importance_df_toile_FIM, file = "importance_toile_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_toile_FIM <- read_csv("test_data_toile_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_toile_FIM %>% glimpse()
+skim(test_data_toile_FIM)
+#予測
+prediction_toile_FIM <- predict(rf_model_toile_FIM, test_data_toile_FIM)
+prediction_toile_FIM
+RMSE(prediction_toile_FIM, test_data_toile_FIM$退院時FIMトイレ動作)
+MAE(prediction_toile_FIM, test_data_toile_FIM$退院時FIMトイレ動作)
+R2(pred = prediction_toile_FIM, obs = test_data_toile_FIM$退院時FIMトイレ動作)
+#予測した数値をcsvに入れて書き出す
+test_data_toile_FIM$pre <- prediction_toile_FIM
+write.csv(test_data_toile_FIM, file = "test_data_toile_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_toile_FIM_pre <- predict(rf_model_toile_FIM, train_data_toile_FIM)
+prediction_toile_FIM_pre
+train_data_toile_FIM$pre <- prediction_toile_FIM_pre
+write.csv(train_data_toile_FIM, file = "train_data_toile_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_toile_FIM <- median(abs(train_data_toile_FIM$退院時FIMトイレ動作 - train_data_toile_FIM$pre))
+medae_train_toile_FIM
+#テストデータの中央値誤差を計算する
+medae_test_toile_FIM <-median(abs(test_data_toile_FIM$退院時FIMトイレ動作 - test_data_toile_FIM$pre))
+medae_test_toile_FIM
+#排尿管理で機械学習していく
+train_data_bladder_FIM <- read_csv("train_data_bladder_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_bladder_FIM %>% glimpse()
+skim(train_data_bladder_FIM)
+rf_model_bladder_FIM <- train(退院時FIM排尿管理 ~ ., 
+                              data = train_data_bladder_FIM, 
+                              method = "rf", 
+                              trControl = trainControl(method = "repeatedcv", 
+                                                       number = 10, 
+                                                       repeats = 3))
+#学習データモデルの結果
+rf_model_bladder_FIM
+rf_model_bladder_FIM$results
+rf_model_bladder_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_bladder_FIM <- varImp(rf_model_bladder_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_bladder_FIM <- as.data.frame(importance_data_bladder_FIM$importance)
+importance_df_bladder_FIM$Feature <- rownames(importance_df_bladder_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_bladder_FIM)
+write.csv(importance_df_bladder_FIM, file = "importance_bladder_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_bladder_FIM <- read_csv("test_data_bladder_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_bladder_FIM %>% glimpse()
+skim(test_data_bladder_FIM)
+#予測
+prediction_bladder_FIM <- predict(rf_model_bladder_FIM, test_data_bladder_FIM)
+prediction_bladder_FIM
+RMSE(prediction_bladder_FIM, test_data_bladder_FIM$退院時FIM排尿管理)
+MAE(prediction_bladder_FIM, test_data_bladder_FIM$退院時FIM排尿管理)
+R2(pred = prediction_bladder_FIM, obs = test_data_bladder_FIM$退院時FIM排尿管理)
+#予測した数値をcsvに入れて書き出す
+test_data_bladder_FIM$pre <- prediction_bladder_FIM
+write.csv(test_data_bladder_FIM, file = "test_data_bladder_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_bladder_FIM_pre <- predict(rf_model_bladder_FIM, train_data_bladder_FIM)
+prediction_bladder_FIM_pre
+train_data_bladder_FIM$pre <- prediction_bladder_FIM_pre
+write.csv(train_data_bladder_FIM, file = "train_data_bladder_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_bladder_FIM <- median(abs(train_data_bladder_FIM$退院時FIM排尿管理 - train_data_bladder_FIM$pre))
+medae_train_bladder_FIM
+#テストデータの中央値誤差を計算する
+medae_test_bladder_FIM <-median(abs(test_data_bladder_FIM$退院時FIM排尿管理 - test_data_bladder_FIM$pre))
+medae_test_bladder_FIM
+#排便管理で機械学習していく
+train_data_bowel_FIM <- read_csv("train_data_bowel_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_bowel_FIM %>% glimpse()
+skim(train_data_bowel_FIM)
+rf_model_bowel_FIM <- train(退院時FIM排便管理 ~ ., 
+                            data = train_data_bowel_FIM, 
+                            method = "rf", 
+                            trControl = trainControl(method = "repeatedcv", 
+                                                     number = 10, 
+                                                     repeats = 3))
+#学習データモデルの結果
+rf_model_bowel_FIM
+rf_model_bowel_FIM$results
+rf_model_bowel_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_bowel_FIM <- varImp(rf_model_bowel_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_bowel_FIM <- as.data.frame(importance_data_bowel_FIM$importance)
+importance_df_bowel_FIM$Feature <- rownames(importance_df_bowel_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_bowel_FIM)
+write.csv(importance_df_bowel_FIM, file = "importance_bowel_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_bowel_FIM <- read_csv("test_data_bowel_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_bowel_FIM %>% glimpse()
+skim(test_data_bowel_FIM)
+#予測
+prediction_bowel_FIM <- predict(rf_model_bowel_FIM, test_data_bowel_FIM)
+prediction_bowel_FIM
+RMSE(prediction_bowel_FIM, test_data_bowel_FIM$退院時FIM排便管理)
+MAE(prediction_bowel_FIM, test_data_bowel_FIM$退院時FIM排便管理)
+R2(pred = prediction_bowel_FIM, obs = test_data_bowel_FIM$退院時FIM排便管理)
+#予測した数値をcsvに入れて書き出す
+test_data_bowel_FIM$pre <- prediction_bowel_FIM
+write.csv(test_data_bowel_FIM, file = "test_data_bowel_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_bowel_FIM_pre <- predict(rf_model_bowel_FIM, train_data_bowel_FIM)
+prediction_bowel_FIM_pre
+train_data_bowel_FIM$pre <- prediction_bowel_FIM_pre
+write.csv(train_data_bowel_FIM, file = "train_data_bowel_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_bowel_FIM <- median(abs(train_data_bowel_FIM$退院時FIM排便管理 - train_data_bowel_FIM$pre))
+medae_train_bowel_FIM
+#テストデータの中央値誤差を計算する
+medae_test_bowel_FIM <-median(abs(test_data_bowel_FIM$退院時FIM排便管理 - test_data_bowel_FIM$pre))
+medae_test_bowel_FIM
+#ベッド移乗で機械学習していく
+train_data_trans_bed_FIM <- read_csv("train_data_trans_bed_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_trans_bed_FIM %>% glimpse()
+skim(train_data_trans_bed_FIM)
+rf_model_trans_bed_FIM <- train(退院時FIMベッド移乗 ~ ., 
+                                data = train_data_trans_bed_FIM, 
+                                method = "rf", 
+                                trControl = trainControl(method = "repeatedcv", 
+                                                         number = 10, 
+                                                         repeats = 3))
+#学習データモデルの結果
+rf_model_trans_bed_FIM
+rf_model_trans_bed_FIM$results
+rf_model_trans_bed_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_trans_bed_FIM <- varImp(rf_model_trans_bed_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_trans_bed_FIM <- as.data.frame(importance_data_trans_bed_FIM$importance)
+importance_df_trans_bed_FIM$Feature <- rownames(importance_df_trans_bed_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_trans_bed_FIM)
+write.csv(importance_df_trans_bed_FIM, file = "importance_trans_bed_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_trans_bed_FIM <- read_csv("test_data_trans_bed_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_trans_bed_FIM %>% glimpse()
+skim(test_data_trans_bed_FIM)
+#予測
+prediction_trans_bed_FIM <- predict(rf_model_trans_bed_FIM, test_data_trans_bed_FIM)
+prediction_trans_bed_FIM
+RMSE(prediction_trans_bed_FIM, test_data_trans_bed_FIM$退院時FIMベッド移乗)
+MAE(prediction_trans_bed_FIM, test_data_trans_bed_FIM$退院時FIMベッド移乗)
+R2(pred = prediction_trans_bed_FIM, obs = test_data_trans_bed_FIM$退院時FIMベッド移乗)
+#予測した数値をcsvに入れて書き出す
+test_data_trans_bed_FIM$pre <- prediction_trans_bed_FIM
+write.csv(test_data_trans_bed_FIM, file = "test_data_trans_bed_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_trans_bed_FIM_pre <- predict(rf_model_trans_bed_FIM, train_data_trans_bed_FIM)
+prediction_trans_bed_FIM_pre
+train_data_trans_bed_FIM$pre <- prediction_trans_bed_FIM_pre
+write.csv(train_data_trans_bed_FIM, file = "train_data_trans_bed_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_trans_bed_FIM <- median(abs(train_data_trans_bed_FIM$退院時FIMベッド移乗 - train_data_trans_bed_FIM$pre))
+medae_train_trans_bed_FIM
+#テストデータの中央値誤差を計算する
+medae_test_trans_bed_FIM <-median(abs(test_data_trans_bed_FIM$退院時FIMベッド移乗 - test_data_trans_bed_FIM$pre))
+medae_test_trans_bed_FIM
+#トイレ移乗で機械学習していく
+train_data_trans_toile_FIM <- read_csv("train_data_trans_toile_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_trans_toile_FIM %>% glimpse()
+skim(train_data_trans_toile_FIM)
+rf_model_trans_toile_FIM <- train(退院時FIMトイレ移乗 ~ ., 
+                                  data = train_data_trans_toile_FIM, 
+                                  method = "rf", 
+                                  trControl = trainControl(method = "repeatedcv", 
+                                                           number = 10, 
+                                                           repeats = 3))
+#学習データモデルの結果
+rf_model_trans_toile_FIM
+rf_model_trans_toile_FIM$results
+rf_model_trans_toile_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_trans_toile_FIM <- varImp(rf_model_trans_toile_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_trans_toile_FIM <- as.data.frame(importance_data_trans_toile_FIM$importance)
+importance_df_trans_toile_FIM$Feature <- rownames(importance_df_trans_toile_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_trans_toile_FIM)
+write.csv(importance_df_trans_toile_FIM, file = "importance_trans_toile_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_trans_toile_FIM <- read_csv("test_data_trans_toile_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_trans_toile_FIM %>% glimpse()
+skim(test_data_trans_toile_FIM)
+#予測
+prediction_trans_toile_FIM <- predict(rf_model_trans_toile_FIM, test_data_trans_toile_FIM)
+prediction_trans_toile_FIM
+RMSE(prediction_trans_toile_FIM, test_data_trans_toile_FIM$退院時FIMトイレ移乗)
+MAE(prediction_trans_toile_FIM, test_data_trans_toile_FIM$退院時FIMトイレ移乗)
+R2(pred = prediction_trans_toile_FIM, obs = test_data_trans_toile_FIM$退院時FIMトイレ移乗)
+#予測した数値をcsvに入れて書き出す
+test_data_trans_toile_FIM$pre <- prediction_trans_toile_FIM
+write.csv(test_data_trans_toile_FIM, file = "test_data_trans_toile_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_trans_toile_FIM_pre <- predict(rf_model_trans_toile_FIM, train_data_trans_toile_FIM)
+prediction_trans_toile_FIM_pre
+train_data_trans_toile_FIM$pre <- prediction_trans_toile_FIM_pre
+write.csv(train_data_trans_toile_FIM, file = "train_data_trans_toile_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_trans_toile_FIM <- median(abs(train_data_trans_toile_FIM$退院時FIMトイレ移乗 - train_data_trans_toile_FIM$pre))
+medae_train_trans_toile_FIM
+#テストデータの中央値誤差を計算する
+medae_test_trans_toile_FIM <-median(abs(test_data_trans_toile_FIM$退院時FIMトイレ移乗 - test_data_trans_toile_FIM$pre))
+medae_test_trans_toile_FIM
+#浴槽移乗で機械学習していく
+train_data_trans_bath_FIM <- read_csv("train_data_trans_bath_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_trans_bath_FIM %>% glimpse()
+skim(train_data_trans_bath_FIM)
+rf_model_trans_bath_FIM <- train(退院時FIM浴槽移乗 ~ ., 
+                                 data = train_data_trans_bath_FIM, 
+                                 method = "rf", 
+                                 trControl = trainControl(method = "repeatedcv", 
+                                                          number = 10, 
+                                                          repeats = 3))
+#学習データモデルの結果
+rf_model_trans_bath_FIM
+rf_model_trans_bath_FIM$results
+rf_model_trans_bath_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_trans_bath_FIM <- varImp(rf_model_trans_bath_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_trans_bath_FIM <- as.data.frame(importance_data_trans_bath_FIM$importance)
+importance_df_trans_bath_FIM$Feature <- rownames(importance_df_trans_bath_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_trans_bath_FIM)
+write.csv(importance_df_trans_bath_FIM, file = "importance_trans_bath_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_trans_bath_FIM <- read_csv("test_data_trans_bath_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_trans_bath_FIM %>% glimpse()
+skim(test_data_trans_bath_FIM)
+#予測
+prediction_trans_bath_FIM <- predict(rf_model_trans_bath_FIM, test_data_trans_bath_FIM)
+prediction_trans_bath_FIM
+RMSE(prediction_trans_bath_FIM, test_data_trans_bath_FIM$退院時FIM浴槽移乗)
+MAE(prediction_trans_bath_FIM, test_data_trans_bath_FIM$退院時FIM浴槽移乗)
+R2(pred = prediction_trans_bath_FIM, obs = test_data_trans_bath_FIM$退院時FIM浴槽移乗)
+#予測した数値をcsvに入れて書き出す
+test_data_trans_bath_FIM$pre <- prediction_trans_bath_FIM
+write.csv(test_data_trans_bath_FIM, file = "test_data_trans_bath_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_trans_bath_FIM_pre <- predict(rf_model_trans_bath_FIM, train_data_trans_bath_FIM)
+prediction_trans_bath_FIM_pre
+train_data_trans_bath_FIM$pre <- prediction_trans_bath_FIM_pre
+write.csv(train_data_trans_bath_FIM, file = "train_data_trans_bath_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_trans_bath_FIM <- median(abs(train_data_trans_bath_FIM$退院時FIM浴槽移乗 - train_data_trans_bath_FIM$pre))
+medae_train_trans_bath_FIM
+#テストデータの中央値誤差を計算する
+medae_test_trans_bath_FIM <-median(abs(test_data_trans_bath_FIM$退院時FIM浴槽移乗 - test_data_trans_bath_FIM$pre))
+medae_test_trans_bath_FIM
+#歩行で機械学習していく
+train_data_gait_FIM <- read_csv("train_data_gait_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_gait_FIM %>% glimpse()
+skim(train_data_gait_FIM)
+rf_model_gait_FIM <- train(退院時FIM歩行 ~ ., 
+                           data = train_data_gait_FIM, 
+                           method = "rf", 
+                           trControl = trainControl(method = "repeatedcv", 
+                                                    number = 10, 
+                                                    repeats = 3))
+#学習データモデルの結果
+rf_model_gait_FIM
+rf_model_gait_FIM$results
+rf_model_gait_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_gait_FIM <- varImp(rf_model_gait_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_gait_FIM <- as.data.frame(importance_data_gait_FIM$importance)
+importance_df_gait_FIM$Feature <- rownames(importance_df_gait_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_gait_FIM)
+write.csv(importance_df_gait_FIM, file = "importance_gait_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_gait_FIM <- read_csv("test_data_gait_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_gait_FIM %>% glimpse()
+skim(test_data_gait_FIM)
+#予測
+prediction_gait_FIM <- predict(rf_model_gait_FIM, test_data_gait_FIM)
+prediction_gait_FIM
+RMSE(prediction_gait_FIM, test_data_gait_FIM$退院時FIM歩行)
+MAE(prediction_gait_FIM, test_data_gait_FIM$退院時FIM歩行)
+R2(pred = prediction_gait_FIM, obs = test_data_gait_FIM$退院時FIM歩行)
+#予測した数値をcsvに入れて書き出す
+test_data_gait_FIM$pre <- prediction_gait_FIM
+write.csv(test_data_gait_FIM, file = "test_data_gait_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_gait_FIM_pre <- predict(rf_model_gait_FIM, train_data_gait_FIM)
+prediction_gait_FIM_pre
+train_data_gait_FIM$pre <- prediction_gait_FIM_pre
+write.csv(train_data_gait_FIM, file = "train_data_gait_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_gait_FIM <- median(abs(train_data_gait_FIM$退院時FIM歩行 - train_data_gait_FIM$pre))
+medae_train_gait_FIM
+#テストデータの中央値誤差を計算する
+medae_test_gait_FIM <-median(abs(test_data_gait_FIM$退院時FIM歩行 - test_data_gait_FIM$pre))
+medae_test_gait_FIM
+#階段で機械学習していく
+train_data_stairs_FIM <- read_csv("train_data_stairs_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_stairs_FIM %>% glimpse()
+skim(train_data_stairs_FIM)
+rf_model_stairs_FIM <- train(退院時FIM階段 ~ ., 
+                             data = train_data_stairs_FIM, 
+                             method = "rf", 
+                             trControl = trainControl(method = "repeatedcv", 
+                                                      number = 10, 
+                                                      repeats = 3))
+#学習データモデルの結果
+rf_model_stairs_FIM
+rf_model_stairs_FIM$results
+rf_model_stairs_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_stairs_FIM <- varImp(rf_model_stairs_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_stairs_FIM <- as.data.frame(importance_data_stairs_FIM$importance)
+importance_df_stairs_FIM$Feature <- rownames(importance_df_stairs_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_stairs_FIM)
+write.csv(importance_df_stairs_FIM, file = "importance_stairs_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_stairs_FIM <- read_csv("test_data_stairs_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_stairs_FIM %>% glimpse()
+skim(test_data_stairs_FIM)
+#予測
+prediction_stairs_FIM <- predict(rf_model_stairs_FIM, test_data_stairs_FIM)
+prediction_stairs_FIM
+RMSE(prediction_stairs_FIM, test_data_stairs_FIM$退院時FIM階段)
+MAE(prediction_stairs_FIM, test_data_stairs_FIM$退院時FIM階段)
+R2(pred = prediction_stairs_FIM, obs = test_data_stairs_FIM$退院時FIM階段)
+#予測した数値をcsvに入れて書き出す
+test_data_stairs_FIM$pre <- prediction_stairs_FIM
+write.csv(test_data_stairs_FIM, file = "test_data_stairs_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_stairs_FIM_pre <- predict(rf_model_stairs_FIM, train_data_stairs_FIM)
+prediction_stairs_FIM_pre
+train_data_stairs_FIM$pre <- prediction_stairs_FIM_pre
+write.csv(train_data_stairs_FIM, file = "train_data_stairs_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_stairs_FIM <- median(abs(train_data_stairs_FIM$退院時FIM階段 - train_data_stairs_FIM$pre))
+medae_train_stairs_FIM
+#テストデータの中央値誤差を計算する
+medae_test_stairs_FIM <-median(abs(test_data_stairs_FIM$退院時FIM階段 - test_data_stairs_FIM$pre))
+medae_test_stairs_FIM
+#理解で機械学習していく
+train_data_comp_FIM <- read_csv("train_data_comp_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_comp_FIM %>% glimpse()
+skim(train_data_comp_FIM)
+rf_model_comp_FIM <- train(退院時FIM理解 ~ ., 
+                           data = train_data_comp_FIM, 
+                           method = "rf", 
+                           trControl = trainControl(method = "repeatedcv", 
+                                                    number = 10, 
+                                                    repeats = 3))
+#学習データモデルの結果
+rf_model_comp_FIM
+rf_model_comp_FIM$results
+rf_model_comp_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_comp_FIM <- varImp(rf_model_comp_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_comp_FIM <- as.data.frame(importance_data_comp_FIM$importance)
+importance_df_comp_FIM$Feature <- rownames(importance_df_comp_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_comp_FIM)
+write.csv(importance_df_comp_FIM, file = "importance_comp_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_comp_FIM <- read_csv("test_data_comp_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_comp_FIM %>% glimpse()
+skim(test_data_comp_FIM)
+#予測
+prediction_comp_FIM <- predict(rf_model_comp_FIM, test_data_comp_FIM)
+prediction_comp_FIM
+RMSE(prediction_comp_FIM, test_data_comp_FIM$退院時FIM理解)
+MAE(prediction_comp_FIM, test_data_comp_FIM$退院時FIM理解)
+R2(pred = prediction_comp_FIM, obs = test_data_comp_FIM$退院時FIM理解)
+#予測した数値をcsvに入れて書き出す
+test_data_comp_FIM$pre <- prediction_comp_FIM
+write.csv(test_data_comp_FIM, file = "test_data_comp_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_comp_FIM_pre <- predict(rf_model_comp_FIM, train_data_comp_FIM)
+prediction_comp_FIM_pre
+train_data_comp_FIM$pre <- prediction_comp_FIM_pre
+write.csv(train_data_comp_FIM, file = "train_data_comp_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_comp_FIM <- median(abs(train_data_comp_FIM$退院時FIM理解 - train_data_comp_FIM$pre))
+medae_train_comp_FIM
+#テストデータの中央値誤差を計算する
+medae_test_comp_FIM <-median(abs(test_data_comp_FIM$退院時FIM理解 - test_data_comp_FIM$pre))
+medae_test_comp_FIM
+#表出で機械学習していく
+train_data_express_FIM <- read_csv("train_data_express_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_express_FIM %>% glimpse()
+skim(train_data_express_FIM)
+rf_model_express_FIM <- train(退院時FIM表出 ~ ., 
+                              data = train_data_express_FIM, 
+                              method = "rf", 
+                              trControl = trainControl(method = "repeatedcv", 
+                                                       number = 10, 
+                                                       repeats = 3))
+#学習データモデルの結果
+rf_model_express_FIM
+rf_model_express_FIM$results
+rf_model_express_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_express_FIM <- varImp(rf_model_express_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_express_FIM <- as.data.frame(importance_data_express_FIM$importance)
+importance_df_express_FIM$Feature <- rownames(importance_df_express_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_express_FIM)
+write.csv(importance_df_express_FIM, file = "importance_express_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_express_FIM <- read_csv("test_data_express_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_express_FIM %>% glimpse()
+skim(test_data_express_FIM)
+#予測
+prediction_express_FIM <- predict(rf_model_express_FIM, test_data_express_FIM)
+prediction_express_FIM
+RMSE(prediction_express_FIM, test_data_express_FIM$退院時FIM表出)
+MAE(prediction_express_FIM, test_data_express_FIM$退院時FIM表出)
+R2(pred = prediction_express_FIM, obs = test_data_express_FIM$退院時FIM表出)
+#予測した数値をcsvに入れて書き出す
+test_data_express_FIM$pre <- prediction_express_FIM
+write.csv(test_data_express_FIM, file = "test_data_express_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_express_FIM_pre <- predict(rf_model_express_FIM, train_data_express_FIM)
+prediction_express_FIM_pre
+train_data_express_FIM$pre <- prediction_express_FIM_pre
+write.csv(train_data_express_FIM, file = "train_data_express_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_express_FIM <- median(abs(train_data_express_FIM$退院時FIM表出 - train_data_express_FIM$pre))
+medae_train_express_FIM
+#テストデータの中央値誤差を計算する
+medae_test_express_FIM <-median(abs(test_data_express_FIM$退院時FIM表出 - test_data_express_FIM$pre))
+medae_test_express_FIM
+#社会的交流で機械学習していく
+train_data_social_FIM <- read_csv("train_data_social_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_social_FIM %>% glimpse()
+skim(train_data_social_FIM)
+rf_model_social_FIM <- train(退院時FIM社会的交流 ~ ., 
+                             data = train_data_social_FIM, 
+                             method = "rf", 
+                             trControl = trainControl(method = "repeatedcv", 
+                                                      number = 10, 
+                                                      repeats = 3))
+#学習データモデルの結果
+rf_model_social_FIM
+rf_model_social_FIM$results
+rf_model_social_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_social_FIM <- varImp(rf_model_social_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_social_FIM <- as.data.frame(importance_data_social_FIM$importance)
+importance_df_social_FIM$Feature <- rownames(importance_df_social_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_social_FIM)
+write.csv(importance_df_social_FIM, file = "importance_social_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_social_FIM <- read_csv("test_data_social_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_social_FIM %>% glimpse()
+skim(test_data_social_FIM)
+#予測
+prediction_social_FIM <- predict(rf_model_social_FIM, test_data_social_FIM)
+prediction_social_FIM
+RMSE(prediction_social_FIM, test_data_social_FIM$退院時FIM社会的交流)
+MAE(prediction_social_FIM, test_data_social_FIM$退院時FIM社会的交流)
+R2(pred = prediction_social_FIM, obs = test_data_social_FIM$退院時FIM社会的交流)
+#予測した数値をcsvに入れて書き出す
+test_data_social_FIM$pre <- prediction_social_FIM
+write.csv(test_data_social_FIM, file = "test_data_social_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_social_FIM_pre <- predict(rf_model_social_FIM, train_data_social_FIM)
+prediction_social_FIM_pre
+train_data_social_FIM$pre <- prediction_social_FIM_pre
+write.csv(train_data_social_FIM, file = "train_data_social_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_social_FIM <- median(abs(train_data_social_FIM$退院時FIM社会的交流 - train_data_social_FIM$pre))
+medae_train_social_FIM
+#テストデータの中央値誤差を計算する
+medae_test_social_FIM <-median(abs(test_data_social_FIM$退院時FIM社会的交流 - test_data_social_FIM$pre))
+medae_test_social_FIM
+#問題解決で機械学習していく
+train_data_problem_FIM <- read_csv("train_data_problem_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_problem_FIM %>% glimpse()
+skim(train_data_problem_FIM)
+rf_model_problem_FIM <- train(退院時FIM問題解決 ~ ., 
+                              data = train_data_problem_FIM, 
+                              method = "rf", 
+                              trControl = trainControl(method = "repeatedcv", 
+                                                       number = 10, 
+                                                       repeats = 3))
+#学習データモデルの結果
+rf_model_problem_FIM
+rf_model_problem_FIM$results
+rf_model_problem_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_problem_FIM <- varImp(rf_model_problem_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_problem_FIM <- as.data.frame(importance_data_problem_FIM$importance)
+importance_df_problem_FIM$Feature <- rownames(importance_df_problem_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_problem_FIM)
+write.csv(importance_df_problem_FIM, file = "importance_problem_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_problem_FIM <- read_csv("test_data_problem_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_problem_FIM %>% glimpse()
+skim(test_data_problem_FIM)
+#予測
+prediction_problem_FIM <- predict(rf_model_problem_FIM, test_data_problem_FIM)
+prediction_problem_FIM
+RMSE(prediction_problem_FIM, test_data_problem_FIM$退院時FIM問題解決)
+MAE(prediction_problem_FIM, test_data_problem_FIM$退院時FIM問題解決)
+R2(pred = prediction_problem_FIM, obs = test_data_problem_FIM$退院時FIM問題解決)
+#予測した数値をcsvに入れて書き出す
+test_data_problem_FIM$pre <- prediction_problem_FIM
+write.csv(test_data_problem_FIM, file = "test_data_problem_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_problem_FIM_pre <- predict(rf_model_problem_FIM, train_data_problem_FIM)
+prediction_problem_FIM_pre
+train_data_problem_FIM$pre <- prediction_problem_FIM_pre
+write.csv(train_data_problem_FIM, file = "train_data_problem_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_problem_FIM <- median(abs(train_data_problem_FIM$退院時FIM問題解決 - train_data_problem_FIM$pre))
+medae_train_problem_FIM
+#テストデータの中央値誤差を計算する
+medae_test_problem_FIM <-median(abs(test_data_problem_FIM$退院時FIM問題解決 - test_data_problem_FIM$pre))
+medae_test_problem_FIM
+#記憶で機械学習していく
+train_data_memory_FIM <- read_csv("train_data_memory_FIM.csv",locale = locale(encoding = "cp932"))
+train_data_memory_FIM %>% glimpse()
+skim(train_data_memory_FIM)
+rf_model_memory_FIM <- train(退院時FIM記憶 ~ ., 
+                             data = train_data_memory_FIM, 
+                             method = "rf", 
+                             trControl = trainControl(method = "repeatedcv", 
+                                                      number = 10, 
+                                                      repeats = 3))
+#学習データモデルの結果
+rf_model_memory_FIM
+rf_model_memory_FIM$results
+rf_model_memory_FIM$bestTune
+#学習データに使用した変数の重要度の可視化
+#重要な変数の具体的な数値を取得する
+importance_data_memory_FIM <- varImp(rf_model_memory_FIM)
+# 変数重要度をデータフレームに変換
+importance_df_memory_FIM <- as.data.frame(importance_data_memory_FIM$importance)
+importance_df_memory_FIM$Feature <- rownames(importance_df_memory_FIM)
+# 重要度の具体的な数値を表示
+print(importance_df_memory_FIM)
+write.csv(importance_df_memory_FIM, file = "importance_memory_FIM.csv", row.names = FALSE, fileEncoding = "CP932")
+#テストデータでの確認
+test_data_memory_FIM <- read_csv("test_data_memory_FIM.csv",locale = locale(encoding = "cp932"))
+test_data_memory_FIM %>% glimpse()
+skim(test_data_memory_FIM)
+#予測
+prediction_memory_FIM <- predict(rf_model_memory_FIM, test_data_memory_FIM)
+prediction_memory_FIM
+RMSE(prediction_memory_FIM, test_data_memory_FIM$退院時FIM記憶)
+MAE(prediction_memory_FIM, test_data_memory_FIM$退院時FIM記憶)
+R2(pred = prediction_memory_FIM, obs = test_data_memory_FIM$退院時FIM記憶)
+#予測した数値をcsvに入れて書き出す
+test_data_memory_FIM$pre <- prediction_memory_FIM
+write.csv(test_data_memory_FIM, file = "test_data_memory_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+#学習データの中央値誤差を計算する
+prediction_memory_FIM_pre <- predict(rf_model_memory_FIM, train_data_memory_FIM)
+prediction_memory_FIM_pre
+train_data_memory_FIM$pre <- prediction_memory_FIM_pre
+write.csv(train_data_memory_FIM, file = "train_data_memory_FIM_pre_new.csv", row.names = FALSE, fileEncoding = "CP932")
+medae_train_memory_FIM <- median(abs(train_data_memory_FIM$退院時FIM記憶 - train_data_memory_FIM$pre))
+medae_train_memory_FIM
+#テストデータの中央値誤差を計算する
+medae_test_memory_FIM <-median(abs(test_data_memory_FIM$退院時FIM記憶 - test_data_memory_FIM$pre))
+medae_test_memory_FIM
