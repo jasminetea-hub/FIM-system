@@ -1,4 +1,4 @@
-// R FastAPIを使用して予測を行い、データベースに保存するサーバー
+// FIM予測システム - Rモデルを使用した予測サーバー
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');

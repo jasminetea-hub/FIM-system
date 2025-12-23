@@ -38,14 +38,6 @@ R FastAPI サーバーは `http://localhost:5000` で起動します。
 
 #### バックエンド API サーバー（別ターミナル）
 
-**R モデルを使用する場合（推奨）：**
-
-```bash
-npm run server:r
-```
-
-**距離ベースの予測を使用する場合：**
-
 ```bash
 npm run server
 ```
@@ -64,7 +56,6 @@ npm run dev
 
 ```
 web-app/
-├── server.js                  # Express APIサーバー（距離ベース予測）
 ├── server_r_model.js          # Express APIサーバー（Rモデル使用）
 ├── r_api/                     # R FastAPI関連
 │   ├── predict_api_fastapi.py # FastAPIサーバー
@@ -86,9 +77,9 @@ web-app/
 
 ### POST /api/predict
 
-予測値を計算するエンドポイント（R モデルを使用する場合は`server_r_model.js`を使用）
+予測値を計算するエンドポイント（Rモデルを使用）
 
-**注意**: R モデルを使用する場合、予測結果は自動的にデータベースに保存されます。
+**注意**: 予測結果は自動的にデータベースに保存されます。
 
 **リクエストボディ:**
 
@@ -132,42 +123,37 @@ web-app/
 REACT_APP_API_URL=http://localhost:3001
 ```
 
-## ローカルサーバーでの起動（単一サーバー）
+## ローカルサーバーでの起動
 
 フロントエンドとバックエンドを1つのサーバーで動作させます：
 
-### 距離ベース予測を使用する場合：
+```bash
+# 1. R FastAPIサーバーを起動（別ターミナル）
+cd r_api
+python predict_api_fastapi.py
+```
+
+R FastAPIサーバーは `http://localhost:5000` で起動します。
 
 ```bash
-# 1. フロントエンドをビルド（初回のみ、または変更時）
-npm run build
-
-# 2. サーバーを起動（フロントエンドも配信）
+# 2. Node.jsサーバーを起動（別ターミナル）
 npm run server
 ```
 
-### Rモデルを使用する場合：
+バックエンドサーバーは `http://localhost:3001` で起動します。
 
 ```bash
-# 1. フロントエンドをビルド（初回のみ、または変更時）
-npm run build
-
-# 2. R FastAPIサーバーを起動（別ターミナル）
-cd r_api
-python predict_api_fastapi.py
-
-# 3. Node.jsサーバーを起動（別ターミナル）
-npm run server:r
+# 3. フロントエンド開発サーバー（別ターミナル）
+npm run dev
 ```
+
+フロントエンドは `http://localhost:5173` で起動します。
 
 ### ワンコマンドで起動：
 
 ```bash
-# 距離ベース予測の場合
+# フロントエンドをビルドしてサーバーを起動
 npm start
-
-# Rモデルの場合
-npm run start:r
 ```
 
 サーバーは `http://localhost:3001` で起動し、フロントエンドとAPIの両方が利用できます。
@@ -182,13 +168,20 @@ npm run start:r
 npm run build
 ```
 
-2. バックエンドサーバーを起動：
+2. R FastAPIサーバーを起動：
+
+```bash
+cd r_api
+python predict_api_fastapi.py
+```
+
+3. バックエンドサーバーを起動：
 
 ```bash
 npm run server
 ```
 
-3. 環境変数`PORT`でポート番号を変更可能です。
+4. 環境変数`PORT`でポート番号を変更可能です。
 
 ### さくらのインターネットへのデプロイ
 
