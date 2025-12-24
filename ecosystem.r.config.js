@@ -1,4 +1,4 @@
-// PM2設定ファイル（Rモデル使用版）
+// PM2設定ファイル
 // 使用方法: pm2 start ecosystem.r.config.js
 
 module.exports = {
