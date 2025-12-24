@@ -115,7 +115,7 @@ mkdir -p logs
 cp .htaccess.example .htaccess
 
 # PM2でアプリケーションを起動
-pm2 start ecosystem.config.js
+pm2 start ecosystem.r.config.js
 
 # 自動起動を設定
 pm2 startup
@@ -134,9 +134,9 @@ WindowsのPowerShellから：
 npm run build
 
 # 2. VPSにファイルをコピー
-scp -r server.js package.json package-lock.json ubuntu@sakuraubuntu:~/www/
-scp -r dist public scripts ubuntu@sakuraubuntu:~/www/
-scp ecosystem.config.js .htaccess.example ubuntu@sakuraubuntu:~/www/
+scp -r server_r_model.js package.json package-lock.json ubuntu@sakuraubuntu:~/www/
+scp -r dist public scripts r_api ubuntu@sakuraubuntu:~/www/
+scp ecosystem.r.config.js .htaccess.example ubuntu@sakuraubuntu:~/www/
 
 # 3. VPSに接続してセットアップ
 ssh ubuntu@sakuraubuntu
@@ -149,7 +149,7 @@ cd ~/www
 npm install --production
 npm run init-db
 cp .htaccess.example .htaccess
-pm2 start ecosystem.config.js
+pm2 start ecosystem.r.config.js
 pm2 startup
 pm2 save
 ```

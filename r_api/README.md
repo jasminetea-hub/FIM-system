@@ -192,6 +192,6 @@ web-app/
 │   ├── rf_model_all_FIM.rds
 │   ├── rf_model_motor_FIM.rds
 │   └── ...
-└── server.js                   # Node.jsサーバー
+└── server_r_model.js           # Node.jsサーバー（Rモデル使用）
 ```
 

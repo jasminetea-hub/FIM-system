@@ -41,12 +41,14 @@ TEMP_DIR=$(mktemp -d)
 echo "一時ディレクトリ: $TEMP_DIR"
 
 # 必要なファイルをコピー
-cp server.js "$TEMP_DIR/"
+cp server_r_model.js "$TEMP_DIR/"
 cp package.json "$TEMP_DIR/"
 cp package-lock.json "$TEMP_DIR/"
+cp ecosystem.r.config.js "$TEMP_DIR/"
 cp -r dist "$TEMP_DIR/"
 cp -r public "$TEMP_DIR/"
 cp -r scripts "$TEMP_DIR/"
+cp -r r_api "$TEMP_DIR/"
 
 # データベースファイルが存在する場合はコピー
 if [ -f "database.db" ]; then
@@ -95,9 +97,9 @@ echo ""
 echo "次のステップ:"
 echo "1. SSHでサーバーに接続: ssh $USER@$SERVER"
 echo "2. アプリケーションディレクトリに移動: cd $REMOTE_PATH"
-echo "3. PM2でアプリケーションを起動:"
+echo "3. R FastAPIサーバーとNode.jsサーバーを起動:"
 echo "   npm install -g pm2"
-echo "   pm2 start server.js --name fim-prediction"
+echo "   pm2 start ecosystem.r.config.js"
 echo "   pm2 startup"
 echo "   pm2 save"
 echo ""

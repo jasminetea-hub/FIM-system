@@ -72,7 +72,7 @@ npm install -g pm2
 mkdir -p logs
 
 # アプリケーションを起動
-pm2 start ecosystem.config.js
+pm2 start ecosystem.r.config.js
 
 # 自動起動を設定
 pm2 startup
@@ -209,7 +209,7 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        source: "dist/,server.js,package.json,package-lock.json,scripts/,public/,ecosystem.config.js,.htaccess.example"
+        source: "dist/,server_r_model.js,package.json,package-lock.json,scripts/,public/,r_api/,ecosystem.r.config.js,.htaccess.example"
         target: "/home/${{ secrets.SERVER_USER }}/[ドメイン名]/"
     
     - name: Run deployment script
@@ -221,7 +221,9 @@ jobs:
         script: |
           cd /home/${{ secrets.SERVER_USER }}/[ドメイン名]/
           npm install --production
-          pm2 restart fim-prediction
+          cd r_api && source venv/bin/activate && pip install -r requirements.txt && deactivate && cd ..
+          npm run build
+          pm2 restart all
 ```
 
 ### GitHub Secretsの設定

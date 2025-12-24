@@ -74,7 +74,7 @@ cp .htaccess.example .htaccess
 ### 11. PM2でアプリケーションを起動
 
 ```bash
-pm2 start ecosystem.config.js
+pm2 start ecosystem.r.config.js
 pm2 startup
 # 表示されたコマンドを実行（sudoは不要、rootなので）
 pm2 save
@@ -120,7 +120,7 @@ apt-get install -y nodejs
 pm2 logs fim-prediction --lines 50
 pm2 describe fim-prediction
 cd /home/ubuntu/www
-node server.js
+node server_r_model.js
 ```
 
 ### ポート3001にアクセスできない場合

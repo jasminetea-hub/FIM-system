@@ -1,12 +1,12 @@
-# Rモデル専用デプロイ手順
+# R モデル専用デプロイ手順
 
-Rで学習した機械学習モデルを使用した予測システムのデプロイ手順です。
+R で学習した機械学習モデルを使用した予測システムのデプロイ手順です。
 
 ## 前提条件
 
-- **VPS IPアドレス**: 160.16.92.115
+- **VPS IP アドレス**: 160.16.92.115
 - **ユーザー名**: ubuntu
-- **GitHubリポジトリ**: https://github.com/jasminetea-hub/FIM-system.git
+- **GitHub リポジトリ**: https://github.com/jasminetea-hub/FIM-system.git
 - **OS**: Ubuntu 22.04
 
 ## アーキテクチャ
@@ -21,15 +21,15 @@ R FastAPIサーバー (predict_api_fastapi.py) - ポート5000
 Rモデル (.rdsファイル)
 ```
 
-## ステップ1: VPSへの接続
+## ステップ 1: VPS への接続
 
 ```powershell
 ssh ubuntu@160.16.92.115
 ```
 
-または、VNCコンソールを使用。
+または、VNC コンソールを使用。
 
-## ステップ2: システムの初期セットアップ
+## ステップ 2: システムの初期セットアップ
 
 ### 2-1. システムを更新
 
@@ -56,7 +56,7 @@ sudo ufw enable
 sudo ufw status
 ```
 
-## ステップ3: Node.jsのインストール
+## ステップ 3: Node.js のインストール
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
@@ -65,7 +65,7 @@ node --version
 npm --version
 ```
 
-## ステップ4: Python 3のインストール
+## ステップ 4: Python 3 のインストール
 
 ```bash
 # Python 3とpipをインストール
@@ -76,9 +76,9 @@ python3 --version
 pip3 --version
 ```
 
-## ステップ5: Rのインストール
+## ステップ 5: R のインストール
 
-### 5-1. Rのリポジトリを追加
+### 5-1. R のリポジトリを追加
 
 ```bash
 # Rのリポジトリを追加
@@ -87,7 +87,7 @@ sudo add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_
 sudo apt update
 ```
 
-### 5-2. Rをインストール
+### 5-2. R をインストール
 
 ```bash
 sudo apt install -y r-base r-base-dev
@@ -96,14 +96,14 @@ sudo apt install -y r-base r-base-dev
 R --version
 ```
 
-### 5-3. Rパッケージをインストール
+### 5-3. R パッケージをインストール
 
 ```bash
 # Rパッケージをインストール（Rコンソールで実行）
 sudo Rscript -e "install.packages(c('caret', 'randomForest', 'rpart'), repos='https://cran.r-project.org/')"
 ```
 
-## ステップ6: rpy2のインストール
+## ステップ 6: rpy2 のインストール
 
 ```bash
 # システムの依存関係をインストール
@@ -116,14 +116,14 @@ sudo pip3 install rpy2
 python3 -c "import rpy2; print('rpy2 installed successfully')"
 ```
 
-## ステップ7: PM2のインストール
+## ステップ 7: PM2 のインストール
 
 ```bash
 sudo npm install -g pm2
 pm2 --version
 ```
 
-## ステップ8: アプリケーションのデプロイ
+## ステップ 8: アプリケーションのデプロイ
 
 ### 8-1. デプロイディレクトリを作成
 
@@ -132,19 +132,19 @@ mkdir -p ~/www
 cd ~/www
 ```
 
-### 8-2. GitHubリポジトリをクローン
+### 8-2. GitHub リポジトリをクローン
 
 ```bash
 git clone https://github.com/jasminetea-hub/FIM-system.git .
 ```
 
-### 8-3. Node.js依存関係をインストール
+### 8-3. Node.js 依存関係をインストール
 
 ```bash
 npm install --production
 ```
 
-### 8-4. Python依存関係をインストール
+### 8-4. Python 依存関係をインストール
 
 ```bash
 cd r_api
@@ -167,7 +167,7 @@ npm run build
 npm run init-db
 ```
 
-### 8-7. Rモデルファイルの確認
+### 8-7. R モデルファイルの確認
 
 ```bash
 # Rモデルファイルが存在するか確認
@@ -180,7 +180,7 @@ ls -la r_api/r_models/
 # - 各項目のモデルファイル（食事、整容、清拭など）
 ```
 
-**注意**: Rモデルファイル（`.rds`）が存在しない場合、Rでモデルを学習・保存する必要があります。
+**注意**: R モデルファイル（`.rds`）が存在しない場合、R でモデルを学習・保存する必要があります。
 
 ### 8-8. ログディレクトリと設定ファイルの準備
 
@@ -209,9 +209,9 @@ R_API_URL=http://localhost:5000
 chmod 600 .env
 ```
 
-## ステップ9: PM2でアプリケーションを起動
+## ステップ 9: PM2 でアプリケーションを起動
 
-### 9-1. R FastAPIサーバーを起動
+### 9-1. R FastAPI サーバーを起動
 
 ```bash
 # ecosystem.r.config.jsを使用して起動
@@ -223,7 +223,7 @@ pm2 start python3 --name r-api-server --interpreter python3 -- predict_api_fasta
 cd ..
 ```
 
-### 9-2. Node.jsサーバーを起動
+### 9-2. Node.js サーバーを起動
 
 ```bash
 # server_r_model.jsを使用
@@ -233,7 +233,7 @@ pm2 start server_r_model.js --name fim-prediction-r
 pm2 start ecosystem.r.config.js
 ```
 
-### 9-3. PM2の自動起動を設定
+### 9-3. PM2 の自動起動を設定
 
 ```bash
 pm2 startup systemd
@@ -248,9 +248,9 @@ pm2 status
 pm2 logs
 ```
 
-## ステップ10: 動作確認
+## ステップ 10: 動作確認
 
-### 10-1. R FastAPIサーバーの確認
+### 10-1. R FastAPI サーバーの確認
 
 ```bash
 # ヘルスチェック
@@ -260,7 +260,7 @@ curl http://localhost:5000/health
 # {"status":"ok","models_loaded":20,"available_models":[...]}
 ```
 
-### 10-2. Node.jsサーバーの確認
+### 10-2. Node.js サーバーの確認
 
 ```bash
 # APIエンドポイントの確認
@@ -278,9 +278,9 @@ curl -X POST http://localhost:3001/api/predict \
 http://160.16.92.115:3001
 ```
 
-## ステップ11: Nginxの設定（オプション）
+## ステップ 11: Nginx の設定（オプション）
 
-### 11-1. Nginxのインストール
+### 11-1. Nginx のインストール
 
 ```bash
 sudo apt install nginx -y
@@ -288,7 +288,7 @@ sudo systemctl start nginx
 sudo systemctl enable nginx
 ```
 
-### 11-2. Nginx設定ファイルの作成
+### 11-2. Nginx 設定ファイルの作成
 
 ```bash
 sudo nano /etc/nginx/sites-available/fim-prediction
@@ -333,7 +333,7 @@ sudo systemctl restart nginx
 
 ## トラブルシューティング
 
-### R FastAPIサーバーが起動しない
+### R FastAPI サーバーが起動しない
 
 ```bash
 # Python環境を確認
@@ -349,7 +349,7 @@ R --version
 python3 predict_api_fastapi.py
 ```
 
-### Rモデルが読み込まれない
+### R モデルが読み込まれない
 
 ```bash
 # モデルファイルの存在確認
@@ -360,7 +360,7 @@ ls -la r_api/r_models/*.rds
 # source("r_api/save_r_models.R")
 ```
 
-### Node.jsサーバーがR FastAPIに接続できない
+### Node.js サーバーが R FastAPI に接続できない
 
 ```bash
 # R FastAPIサーバーが起動しているか確認
@@ -415,7 +415,7 @@ pm2 restart all
 pm2 logs --lines 50
 ```
 
-## PM2コマンドリファレンス
+## PM2 コマンドリファレンス
 
 ```bash
 # ステータス確認
@@ -443,14 +443,13 @@ pm2 delete all
 - [ ] ファイアウォールが有効になっている
 - [ ] 必要なポートのみ開放されている
 - [ ] 環境変数ファイル（.env）の権限が適切（600）
-- [ ] Rモデルファイルの権限が適切
+- [ ] R モデルファイルの権限が適切
 - [ ] ログローテーションが設定されている
 - [ ] 定期的なバックアップが設定されている
 
 ## 参考リンク
 
-- [R公式サイト](https://www.r-project.org/)
-- [rpy2公式ドキュメント](https://rpy2.github.io/)
-- [FastAPI公式ドキュメント](https://fastapi.tiangolo.com/)
-- [PM2公式ドキュメント](https://pm2.keymetrics.io/)
-
+- [R 公式サイト](https://www.r-project.org/)
+- [rpy2 公式ドキュメント](https://rpy2.github.io/)
+- [FastAPI 公式ドキュメント](https://fastapi.tiangolo.com/)
+- [PM2 公式ドキュメント](https://pm2.keymetrics.io/)

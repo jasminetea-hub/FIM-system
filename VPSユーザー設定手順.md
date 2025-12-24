@@ -108,13 +108,13 @@ chown -R ubuntu:ubuntu /home/ubuntu/www
 # ubuntuユーザーが存在する場合
 su - ubuntu
 cd ~/www
-pm2 start ecosystem.config.js
+pm2 start ecosystem.r.config.js
 pm2 startup
 pm2 save
 
 # ubuntuユーザーが存在しない場合は、rootで実行
 cd /home/ubuntu/www
-pm2 start ecosystem.config.js
+pm2 start ecosystem.r.config.js
 pm2 startup
 pm2 save
 ```

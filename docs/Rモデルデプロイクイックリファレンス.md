@@ -1,11 +1,12 @@
-# Rモデルデプロイ クイックリファレンス
+# R モデルデプロイ クイックリファレンス
 
 ## 前提条件
+
 - VPS IP: 160.16.92.115
 - ユーザー: ubuntu
 - GitHub: https://github.com/jasminetea-hub/FIM-system.git
 
-## 1. VPSに接続
+## 1. VPS に接続
 
 ```powershell
 ssh ubuntu@160.16.92.115
@@ -86,7 +87,7 @@ echo "R_API_URL=http://localhost:5000" >> .env
 chmod 600 .env
 ```
 
-## 4. Rモデルファイルの確認
+## 4. R モデルファイルの確認
 
 ```bash
 # Rモデルファイルが存在するか確認
@@ -97,7 +98,7 @@ ls -la r_api/r_models/*.rds
 # source("r_api/save_r_models.R")
 ```
 
-## 5. PM2で起動
+## 5. PM2 で起動
 
 ```bash
 # Rモデル用の設定で起動（両方のサーバーが起動）
@@ -156,4 +157,3 @@ python3 predict_api_fastapi.py
 ```
 
 詳細は `docs/Rモデル専用デプロイ手順.md` を参照してください。
-

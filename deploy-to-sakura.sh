@@ -49,8 +49,8 @@ ssh "$VPS_USER@$VPS_IP" "mkdir -p $REMOTE_PATH && mkdir -p $REMOTE_PATH/logs"
 
 # 4. 必要なファイルをVPSにコピー
 echo -e "${YELLOW}[4/6] ファイルをVPSにコピー中...${NC}"
-scp -r server.js package.json package-lock.json ecosystem.config.js "$VPS_USER@$VPS_IP:$REMOTE_PATH/"
-scp -r dist public scripts "$VPS_USER@$VPS_IP:$REMOTE_PATH/"
+scp -r server_r_model.js package.json package-lock.json ecosystem.r.config.js "$VPS_USER@$VPS_IP:$REMOTE_PATH/"
+scp -r dist public scripts r_api "$VPS_USER@$VPS_IP:$REMOTE_PATH/"
 scp .htaccess.example "$VPS_USER@$VPS_IP:$REMOTE_PATH/.htaccess"
 
 # 5. VPS上でセットアップ
@@ -85,10 +85,10 @@ ssh "$VPS_USER@$VPS_IP" << 'ENDSSH'
 cd /home/ubuntu/www
 
 # PM2でアプリケーションを起動または再起動
-if pm2 list | grep -q "fim-prediction"; then
-    pm2 restart fim-prediction
+if pm2 list | grep -q "fim-prediction-r"; then
+    pm2 restart all
 else
-    pm2 start ecosystem.config.js
+    pm2 start ecosystem.r.config.js
     pm2 startup
     pm2 save
 fi

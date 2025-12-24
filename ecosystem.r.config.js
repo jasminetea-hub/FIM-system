@@ -11,7 +11,7 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 3001,
-        R_API_URL: 'http://localhost:5000'
+        R_API_URL: 'http://localhost:5000',
       },
       // ログ設定
       error_file: './logs/pm2-error.log',
@@ -23,7 +23,7 @@ module.exports = {
       max_memory_restart: '500M',
       // クラッシュ時の設定
       min_uptime: '10s',
-      max_restarts: 10
+      max_restarts: 10,
     },
     {
       name: 'r-api-server',
@@ -34,7 +34,7 @@ module.exports = {
       cwd: '/home/ubuntu/www',
       env: {
         PYTHONUNBUFFERED: '1',
-        PYTHONPATH: '/home/ubuntu/www/r_api'
+        PYTHONPATH: '/home/ubuntu/www/r_api',
       },
       // ログ設定
       error_file: './logs/r-api-error.log',
@@ -46,8 +46,7 @@ module.exports = {
       max_memory_restart: '1G',
       // クラッシュ時の設定
       min_uptime: '10s',
-      max_restarts: 10
-    }
-  ]
+      max_restarts: 10,
+    },
+  ],
 };
-

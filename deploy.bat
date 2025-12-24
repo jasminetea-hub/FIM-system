@@ -22,12 +22,14 @@ echo.
 echo 以下のファイルをFTP/SFTPクライアントでサーバーにアップロードしてください:
 echo.
 echo 必須ファイル:
-echo   - server.js
+echo   - server_r_model.js
 echo   - package.json
 echo   - package-lock.json
+echo   - ecosystem.r.config.js
 echo   - dist/ （ディレクトリごと）
 echo   - public/ （ディレクトリごと）
 echo   - scripts/ （ディレクトリごと）
+echo   - r_api/ （ディレクトリごと）
 echo.
 
 if exist "database.db" (
@@ -47,9 +49,9 @@ echo 1. SSHでサーバーに接続
 echo 2. アップロードしたディレクトリに移動
 echo 3. 依存関係をインストール: npm install --production
 echo 4. データベースを初期化（必要に応じて）: npm run init-db
-echo 5. PM2でアプリケーションを起動:
+echo 5. R FastAPIサーバーとNode.jsサーバーを起動:
 echo    npm install -g pm2
-echo    pm2 start server.js --name fim-prediction
+echo    pm2 start ecosystem.r.config.js
 echo    pm2 startup
 echo    pm2 save
 echo.

@@ -37,8 +37,7 @@ web-app/
 ├── public/                        # 静的ファイル
 │   └── テスト全データ.csv
 │
-├── server.js                      # 既存のNode.jsサーバー
-├── server_with_r_fastapi.js       # R FastAPIを使用するサーバー
+├── server_r_model.js              # Node.jsサーバー（Rモデル使用）
 ├── database.db                    # SQLiteデータベース
 ├── package.json                   # Node.js依存関係
 └── README.md                      # プロジェクトのREADME
@@ -48,24 +47,22 @@ web-app/
 
 ### サーバー
 
-- **server.js** - 既存のNode.jsサーバー（距離ベースの予測を使用）
-- **server_with_r_fastapi.js** - R FastAPIを使用するNode.jsサーバー（推奨）
+- **server_r_model.js** - Node.js サーバー（R FastAPI と連携して R モデルを使用）
 
 ### API
 
-- **r_api/predict_api_fastapi.py** - FastAPIサーバー（Rモデルを使用）
+- **r_api/predict_api_fastapi.py** - FastAPI サーバー（R モデルを使用）
 
 ### データ
 
-- **database.db** - SQLiteデータベース（患者データ）
-- **public/テスト全データ.csv** - CSVデータファイル
+- **database.db** - SQLite データベース（患者データ）
+- **public/テスト全データ.csv** - CSV データファイル
 
 ## 使用方法
 
 1. **環境構築**: `r_api/setup.bat`（Windows）または `r_api/setup.sh`（macOS/Linux）を実行
-2. **Rモデルの準備**: Rで `r_api/save_r_models.R` を実行
-3. **FastAPIサーバーの起動**: `python r_api/predict_api_fastapi.py`
-4. **Node.jsサーバーの起動**: `npm run server`（server_with_r_fastapi.jsを使用する場合）
+2. **R モデルの準備**: R で `r_api/save_r_models.R` を実行
+3. **FastAPI サーバーの起動**: `python r_api/predict_api_fastapi.py`
+4. **Node.js サーバーの起動**: `npm run server`（server_r_model.js を使用）
 
-詳細は各ディレクトリのREADMEを参照してください。
-
+詳細は各ディレクトリの README を参照してください。

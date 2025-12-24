@@ -56,13 +56,13 @@ if ! command -v pm2 &> /dev/null; then
 fi
 
 # PM2でアプリケーションを起動または再起動
-if pm2 list | grep -q "fim-prediction"; then
+if pm2 list | grep -q "fim-prediction-r"; then
     echo "既存のアプリケーションを再起動します"
-    pm2 restart fim-prediction
+    pm2 restart all
 else
     echo "新しいアプリケーションを起動します"
     mkdir -p logs
-    pm2 start ecosystem.config.js
+    pm2 start ecosystem.r.config.js
     pm2 startup
     pm2 save
 fi
@@ -73,5 +73,5 @@ echo ""
 echo "ステータス確認:"
 pm2 status
 echo ""
-echo "ログ確認: pm2 logs fim-prediction"
+echo "ログ確認: pm2 logs fim-prediction-r"
 

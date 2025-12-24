@@ -71,7 +71,7 @@ mkdir -p logs
 cp .htaccess.example .htaccess
 
 # PM2でアプリケーションを起動
-pm2 start ecosystem.config.js
+pm2 start ecosystem.r.config.js
 
 # 自動起動を設定
 pm2 startup

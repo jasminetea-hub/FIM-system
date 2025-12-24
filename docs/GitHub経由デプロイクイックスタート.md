@@ -30,7 +30,15 @@ git clone https://github.com/[ユーザー名]/[リポジトリ名].git .
 ### ステップ3: セットアップと起動（3分）
 
 ```bash
-# 依存関係をインストール
+# Python依存関係をインストール（R FastAPI用）
+cd r_api
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+deactivate
+cd ..
+
+# Node.js依存関係をインストール
 npm install --production
 
 # フロントエンドをビルド
@@ -45,8 +53,8 @@ npm install -g pm2
 # ログディレクトリを作成
 mkdir -p logs
 
-# アプリケーションを起動
-pm2 start ecosystem.config.js
+# アプリケーションを起動（R FastAPIとNode.jsサーバーの両方）
+pm2 start ecosystem.r.config.js
 
 # 自動起動を設定
 pm2 startup
@@ -84,8 +92,9 @@ cd /home/[ユーザー名]/[ドメイン名]/
 ```bash
 git pull origin main
 npm install --production
+cd r_api && source venv/bin/activate && pip install -r requirements.txt && deactivate && cd ..
 npm run build
-pm2 restart fim-prediction
+pm2 restart all
 ```
 
 ---

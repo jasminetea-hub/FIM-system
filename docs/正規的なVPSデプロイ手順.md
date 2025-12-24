@@ -205,11 +205,11 @@ chmod 600 .env
 ### 7-1. PM2 でアプリケーションを起動
 
 ```bash
-# ecosystem.config.jsを使用して起動
-pm2 start ecosystem.config.js
+# ecosystem.r.config.jsを使用して起動
+pm2 start ecosystem.r.config.js
 
 # または、直接起動
-# pm2 start server.js --name fim-prediction
+# pm2 start server_r_model.js --name fim-prediction-r
 ```
 
 ### 7-2. PM2 の設定を保存
@@ -471,7 +471,7 @@ pm2 logs fim-prediction --lines 100
 
 # 手動で起動してエラーを確認
 cd ~/www
-node server.js
+node server_r_model.js
 
 # ポートが使用されているか確認
 sudo netstat -tlnp | grep 3001

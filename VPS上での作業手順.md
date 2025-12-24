@@ -100,7 +100,7 @@ cp .htaccess.example .htaccess
 
 ```bash
 # PM2でアプリケーションを起動
-pm2 start ecosystem.config.js
+pm2 start ecosystem.r.config.js
 
 # 自動起動を設定
 pm2 startup
@@ -164,6 +164,6 @@ pm2 describe fim-prediction
 
 # 手動で起動してエラーを確認
 cd ~/www
-node server.js
+node server_r_model.js
 ```
 
