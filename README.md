@@ -138,9 +138,12 @@ R FastAPIサーバーは `http://localhost:5000` で起動します。
 ```bash
 # 2. Node.jsサーバーを起動（別ターミナル）
 npm run server
+# または
+node server_r_model.js
 ```
 
 バックエンドサーバーは `http://localhost:3001` で起動します。
+**注意**: R FastAPIサーバーが起動している必要があります。
 
 ```bash
 # 3. フロントエンド開発サーバー（別ターミナル）
@@ -175,10 +178,14 @@ cd r_api
 python predict_api_fastapi.py
 ```
 
+R FastAPIサーバーは `http://localhost:5000` で起動します。
+
 3. バックエンドサーバーを起動：
 
 ```bash
 npm run server
+# または
+node server_r_model.js
 ```
 
 4. 環境変数`PORT`でポート番号を変更可能です。

@@ -28,3 +28,7 @@ Thumbs.db
 npm-debug.log*
 logs/
 
+# SQLite tools (executables)
+sqlite-tools/
+*.exe
+
