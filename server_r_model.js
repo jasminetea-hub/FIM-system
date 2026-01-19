@@ -54,8 +54,9 @@ async function checkRAPI() {
     console.log('R FastAPI接続成功:', response.data);
     return true;
   } catch (error) {
-    console.warn('R FastAPIに接続できません。');
-    console.warn('R FastAPIサーバーを起動してください: python r_api/predict_api_fastapi.py');
+        console.warn('R FastAPIに接続できません。');
+        console.warn('R FastAPIサーバーを起動してください: python3 r_api/predict_api_fastapi.py');
+        console.warn('（Windowsの場合は: python r_api/predict_api_fastapi.py）');
     return false;
   }
 }
@@ -105,11 +106,37 @@ app.post('/api/predict', async (req, res) => {
       } catch (error) {
         console.error('R FastAPI呼び出しエラー:', error.message);
         if (error.response) {
-          console.error('レスポンスエラー:', error.response.data);
+          console.error('レスポンスエラー:', error.response.status, error.response.data);
+          // HTTP 500エラーの場合は、詳細なエラーメッセージを返す
+          if (error.response.status === 500) {
+            return res.status(500).json({ 
+              error: 'R FastAPIで内部サーバーエラーが発生しました',
+              detail: error.response.data?.detail || error.message,
+              status: error.response.status,
+              hint: 'R FastAPIサーバーのログを確認してください。Rモデルが正しく読み込まれているか確認してください。'
+            });
+          }
+          return res.status(error.response.status).json({ 
+            error: 'R FastAPIからの予測に失敗しました',
+            detail: error.response.data?.detail || error.message,
+            status: error.response.status
+          });
+        } else if (error.code === 'ECONNREFUSED') {
+          return res.status(503).json({ 
+            error: 'R FastAPIサーバーに接続できません',
+            detail: 'R FastAPIサーバーが起動していない可能性があります',
+            hint: 'python3 r_api/predict_api_fastapi.py を実行してR FastAPIサーバーを起動してください（Windowsの場合は python）'
+          });
+        } else if (error.code === 'ETIMEDOUT') {
+          return res.status(504).json({ 
+            error: 'R FastAPIサーバーへのリクエストがタイムアウトしました',
+            detail: error.message
+          });
         }
         return res.status(503).json({ 
           error: 'R FastAPIからの予測に失敗しました',
-          detail: error.message
+          detail: error.message,
+          code: error.code
         });
       }
     } else {
@@ -376,7 +403,8 @@ app.listen(PORT, HOST, () => {
   if (rAPIAvailable) {
     console.log(`   APIドキュメント: ${R_API_URL}/docs`);
   } else {
-    console.log(`   ⚠️  R FastAPIを起動してください: python r_api/predict_api_fastapi.py`);
+    console.log(`   ⚠️  R FastAPIを起動してください: python3 r_api/predict_api_fastapi.py`);
+    console.log(`   （Windowsの場合は: python r_api/predict_api_fastapi.py）`);
   }
   console.log(`\n⚠️  スマホとPCが同じWi-Fiネットワークに接続されている必要があります`);
   console.log('========================================\n');

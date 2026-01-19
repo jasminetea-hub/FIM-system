@@ -13,7 +13,8 @@
     "init-db": "node scripts/initDatabase.js",
     "add-data": "node scripts/addData.js",
     "view-db": "node scripts/viewDatabase.js",
-    "view-predictions": "node scripts/viewPredictions.js"
+    "view-predictions": "node scripts/viewPredictions.js",
+    "check-api": "node check-api-status.js"
   },
   "keywords": [],
   "author": "",

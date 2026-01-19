@@ -280,11 +280,23 @@ async def predict(request: PredictionRequest):
             total=float(total)
         )
         
+    except HTTPException:
+        # HTTPExceptionはそのまま再発生
+        raise
     except Exception as e:
         print(f"予測エラー: {e}")
         import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        error_trace = traceback.format_exc()
+        print(error_trace)
+        # より詳細なエラーメッセージを返す
+        error_detail = str(e)
+        if "モデル" in error_detail or "model" in error_detail.lower():
+            error_detail += "\nRモデルが正しく読み込まれているか確認してください。"
+        elif "列名" in error_detail or "column" in error_detail.lower():
+            error_detail += "\n入力データの列名がRモデルの期待する形式と一致しているか確認してください。"
+        elif "rpy2" in error_detail.lower():
+            error_detail += "\nrpy2が正しくインストールされ、Rが利用可能か確認してください。"
+        raise HTTPException(status_code=500, detail=error_detail)
 
 if __name__ == "__main__":
     import uvicorn

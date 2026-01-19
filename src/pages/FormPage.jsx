@@ -16,10 +16,10 @@ const FormPage = () => {
   const [daysFromOnset, setDaysFromOnset] = useState('');
 
   const [motionValues, setMotionValues] = useState(
-    Object.fromEntries(motionItems.map((item) => [item, '']))
+    Object.fromEntries(motionItems.map((item) => [item, '1']))
   );
   const [cognitiveValues, setCognitiveValues] = useState(
-    Object.fromEntries(cognitiveItems.map((item) => [item, '']))
+    Object.fromEntries(cognitiveItems.map((item) => [item, '1']))
   );
   const [isLoading, setIsLoading] = useState(false);
 
@@ -151,7 +151,14 @@ const FormPage = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+        // エラーレスポンスの詳細を取得
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          errorData = { error: `HTTP ${response.status} エラー` };
+        }
+        throw new Error(JSON.stringify({ status: response.status, ...errorData }));
       }
 
       const prediction = await response.json();
@@ -183,10 +190,29 @@ const FormPage = () => {
         error.message.includes('NetworkError')
       ) {
         errorMessage =
-          'サーバーに接続できません。サーバーが起動しているか確認してください。';
-      } else if (error.message.includes('API error')) {
-        errorMessage =
-          'サーバーエラーが発生しました。入力データを確認してください。';
+          'サーバーに接続できません。\n\n' +
+          '以下のサーバーが起動しているか確認してください：\n' +
+          '1. Node.jsサーバー: npm run server\n' +
+          '2. R FastAPIサーバー: python r_api/predict_api_fastapi.py';
+      } else if (error.message.includes('API error') || error.message.startsWith('{')) {
+        try {
+          const errorData = JSON.parse(error.message);
+          if (errorData.error) {
+            errorMessage = `サーバーエラー: ${errorData.error}`;
+            if (errorData.detail) {
+              errorMessage += `\n\n詳細: ${errorData.detail}`;
+            }
+            if (errorData.hint) {
+              errorMessage += `\n\n解決方法: ${errorData.hint}`;
+            }
+          } else {
+            errorMessage = `サーバーエラー (HTTP ${errorData.status || '不明'}): ${errorData.error || '予測処理に失敗しました'}`;
+          }
+        } catch (e) {
+          errorMessage = `サーバーエラーが発生しました: ${error.message}`;
+        }
+      } else {
+        errorMessage = `エラー: ${error.message}`;
       }
 
       alert(errorMessage);

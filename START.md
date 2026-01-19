@@ -36,7 +36,9 @@
 
 ```bash
 cd r_api
-python predict_api_fastapi.py
+python3 predict_api_fastapi.py
+# または（Windowsの場合）
+# python predict_api_fastapi.py
 ```
 
 R FastAPIサーバーは `http://localhost:5000` で起動します。

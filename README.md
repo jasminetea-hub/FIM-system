@@ -31,7 +31,9 @@ source("r_api/save_r_models.R")
 
 ```bash
 cd r_api
-python predict_api_fastapi.py
+python3 predict_api_fastapi.py
+# または（Windowsの場合）
+# python predict_api_fastapi.py
 ```
 
 R FastAPI サーバーは `http://localhost:5000` で起動します。
@@ -130,7 +132,9 @@ REACT_APP_API_URL=http://localhost:3001
 ```bash
 # 1. R FastAPIサーバーを起動（別ターミナル）
 cd r_api
-python predict_api_fastapi.py
+python3 predict_api_fastapi.py
+# または（Windowsの場合）
+# python predict_api_fastapi.py
 ```
 
 R FastAPIサーバーは `http://localhost:5000` で起動します。
@@ -175,7 +179,9 @@ npm run build
 
 ```bash
 cd r_api
-python predict_api_fastapi.py
+python3 predict_api_fastapi.py
+# または（Windowsの場合）
+# python predict_api_fastapi.py
 ```
 
 R FastAPIサーバーは `http://localhost:5000` で起動します。
