@@ -34,20 +34,48 @@ git pull origin main || git pull origin master
 echo -e "${YELLOW}[2/5] 依存関係を更新中...${NC}"
 npm install --production
 
+# Python依存関係の更新（R FastAPI用）
+if [ -d "r_api" ]; then
+    echo -e "${YELLOW}Python依存関係を更新中...${NC}"
+    cd r_api
+    if [ ! -d "venv" ]; then
+        echo "Python仮想環境を作成中..."
+        python3 -m venv venv
+    fi
+    source venv/bin/activate
+    pip install -r requirements.txt
+    deactivate
+    cd ..
+fi
+
 # 3. フロントエンドをビルド
 echo -e "${YELLOW}[3/5] フロントエンドをビルド中...${NC}"
 npm run build
 
-# 4. データベースの確認（初回のみ）
-if [ ! -f "database.db" ]; then
-    echo -e "${YELLOW}[4/5] データベースを初期化中...${NC}"
-    npm run init-db
+# 4. Rモデルファイルの確認
+if [ -d "r_api/r_models" ]; then
+    MODEL_COUNT=$(find r_api/r_models -name "*.rds" 2>/dev/null | wc -l)
+    if [ "$MODEL_COUNT" -eq 0 ]; then
+        echo -e "${YELLOW}[4/6] 警告: Rモデルファイル（.rds）が見つかりません${NC}"
+        echo "Rモデルファイルを r_api/r_models/ に配置してください"
+    else
+        echo -e "${YELLOW}[4/6] Rモデルファイルを確認: ${MODEL_COUNT}個のモデルが見つかりました${NC}"
+    fi
 else
-    echo -e "${YELLOW}[4/5] データベースは既に存在します（スキップ）${NC}"
+    echo -e "${YELLOW}[4/6] r_api/r_models/ ディレクトリを作成中...${NC}"
+    mkdir -p r_api/r_models
 fi
 
-# 5. PM2で再起動
-echo -e "${YELLOW}[5/5] アプリケーションを再起動中...${NC}"
+# 5. データベースの確認（初回のみ）
+if [ ! -f "database.db" ]; then
+    echo -e "${YELLOW}[5/6] データベースを初期化中...${NC}"
+    npm run init-db
+else
+    echo -e "${YELLOW}[5/6] データベースは既に存在します（スキップ）${NC}"
+fi
+
+# 6. PM2で再起動
+echo -e "${YELLOW}[6/6] アプリケーションを再起動中...${NC}"
 
 # PM2がインストールされているか確認
 if ! command -v pm2 &> /dev/null; then

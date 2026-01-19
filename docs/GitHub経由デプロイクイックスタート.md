@@ -27,7 +27,26 @@ cd /home/[ユーザー名]/[ドメイン名]/
 git clone https://github.com/[ユーザー名]/[リポジトリ名].git .
 ```
 
-### ステップ3: セットアップと起動（3分）
+### ステップ3: Rモデルファイルの配置（初回のみ）
+
+**重要**: Rモデルファイル（`.rds`）がGitHubに含まれていない場合、手動で配置する必要があります。
+
+ローカルのターミナルから：
+
+```bash
+# モデルファイルをVPSにアップロード
+scp r_api/r_models/rf_model_all_FIM.rds [ユーザー名]@[サーバーアドレス]:~/www/r_api/r_models/
+```
+
+または、サーバー上で確認：
+
+```bash
+# サーバー上で
+ls -la r_api/r_models/*.rds
+# ファイルが存在しない場合は、上記のscpコマンドでアップロード
+```
+
+### ステップ4: セットアップと起動（3分）
 
 ```bash
 # Python依存関係をインストール（R FastAPI用）
@@ -52,6 +71,11 @@ npm install -g pm2
 
 # ログディレクトリを作成
 mkdir -p logs
+
+# Rモデルファイルの確認
+cd r_api
+python3 check_model.py
+cd ..
 
 # アプリケーションを起動（R FastAPIとNode.jsサーバーの両方）
 pm2 start ecosystem.r.config.js

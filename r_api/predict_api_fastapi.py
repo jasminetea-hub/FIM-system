@@ -64,6 +64,13 @@ def load_r_models():
     """Rで学習したモデルを読み込む"""
     global r_models
     
+    print(f"モデルディレクトリ: {MODELS_DIR}")
+    print(f"モデルディレクトリの存在: {os.path.exists(MODELS_DIR)}")
+    
+    if not os.path.exists(MODELS_DIR):
+        print(f"❌ エラー: モデルディレクトリが存在しません: {MODELS_DIR}")
+        return
+    
     # モデルファイルのリスト（Rで保存した.rdsファイル）
     model_files = {
         'total': 'rf_model_all_FIM.rds',
@@ -88,19 +95,43 @@ def load_r_models():
         'memory': 'rf_model_memory_FIM.rds',
     }
     
+    # ディレクトリ内のファイルを確認
+    try:
+        existing_files = os.listdir(MODELS_DIR)
+        print(f"モデルディレクトリ内のファイル: {existing_files}")
+    except Exception as e:
+        print(f"警告: ディレクトリの読み取りに失敗: {e}")
+        existing_files = []
+    
     # 各モデルを読み込む
+    loaded_count = 0
     for key, filename in model_files.items():
         model_path = os.path.join(MODELS_DIR, filename)
         if os.path.exists(model_path):
             try:
+                # ファイルの読み取り権限を確認
+                if not os.access(model_path, os.R_OK):
+                    print(f"❌ エラー: {model_path} に読み取り権限がありません")
+                    continue
+                
                 r_models[key] = base.readRDS(model_path)
-                print(f"Rモデル読み込み完了: {key}")
+                print(f"✅ Rモデル読み込み完了: {key} ({filename})")
+                loaded_count += 1
             except Exception as e:
-                print(f"警告: {model_path} の読み込みに失敗: {e}")
+                print(f"❌ 警告: {model_path} の読み込みに失敗: {e}")
+                import traceback
+                print(f"   詳細: {traceback.format_exc()}")
         else:
-            print(f"警告: {model_path} が見つかりません")
+            print(f"⚠️  警告: {model_path} が見つかりません")
     
-    print(f"読み込み完了: {len(r_models)}個のRモデル")
+    print(f"読み込み完了: {loaded_count}個のRモデルが正常に読み込まれました")
+    
+    if loaded_count == 0:
+        print("❌ エラー: モデルが1つも読み込まれていません")
+        print("   以下のいずれかを確認してください:")
+        print("   1. モデルファイル（.rds）が r_api/r_models/ ディレクトリに存在するか")
+        print("   2. ファイルの読み取り権限があるか")
+        print("   3. Rとrpy2が正しくインストールされているか")
 
 def prepare_r_dataframe(input_data: PredictionRequest) -> pd.DataFrame:
     """入力データをRのデータフレーム形式に変換

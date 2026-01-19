@@ -27,14 +27,14 @@ module.exports = {
     },
     {
       name: 'r-api-server',
-      script: 'r_api/predict_api_fastapi.py',
-      interpreter: 'python3',
+      script: './r_api/start_fastapi.sh',
+      interpreter: 'bash',
       instances: 1,
       exec_mode: 'fork',
-      cwd: '/home/ubuntu/www',
+      cwd: '.',
       env: {
         PYTHONUNBUFFERED: '1',
-        PYTHONPATH: '/home/ubuntu/www/r_api',
+        PYTHONPATH: './r_api',
       },
       // ログ設定
       error_file: './logs/r-api-error.log',
