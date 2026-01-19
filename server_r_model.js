@@ -4,10 +4,206 @@ const cors = require('cors');
 const axios = require('axios');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
+const Encoding = require('encoding-japanese');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const R_API_URL = process.env.R_API_URL || 'http://localhost:5000';
+
+// CSVファイルを使用するかどうか（環境変数で制御、デフォルトはtrue）
+const USE_CSV_MODE = process.env.USE_CSV_MODE !== 'false';
+
+// CSVデータを読み込む
+let csvData = [];
+const csvFilePath = path.join(__dirname, 'r_api', 'r_models', '学習全データ.csv');
+
+// CSVファイルの列名マッピング
+const CSV_COLUMN_MAPPING = {
+  // 個人情報
+  gender: '性別01',
+  age: '年齢',
+  bmi: '入院時BMI',
+  careLevel: '入院時要介護度の有無',
+  daysFromOnset: '発症から入棟までの日数',
+  // 入院時FIM運動機能項目（12項目）
+  admissionMotion: {
+    eat: '入棟時FIM食事',
+    groom: '入棟時FIM整容',
+    bath: '入棟時FIM清拭',
+    dress_up: '入棟時FIM更衣上半身',
+    dress_low: '入棟時FIM更衣下半身',
+    toile: '入棟時FIMトイレ動作',
+    bladder: '入棟時FIM排尿管理',
+    bowel: '入棟時FIM排便管理',
+    trans_bed: '入棟時FIMベッド移乗',
+    trans_toile: '入棟時FIMトイレ移乗',
+    trans_bath: '入棟時FIM浴槽移乗',
+    gait: '入棟時FIM歩行',
+  },
+  // 入院時FIM認知機能項目（5項目）
+  admissionCognitive: {
+    comp: '入棟時FIM理解',
+    express: '入棟時FIM表出',
+    social: '入棟時FIM社会的交流',
+    problem: '入棟時FIM問題解決',
+    memory: '入棟時FIM記憶',
+  },
+  // 退院時FIM運動機能項目（12項目）
+  dischargeMotion: {
+    eat: '退院時FIM食事',
+    groom: '退院時FIM整容',
+    bath: '退院時FIM清拭',
+    dress_up: '退院時FIM更衣上半身',
+    dress_low: '退院時FIM更衣下半身',
+    toile: '退院時FIMトイレ動作',
+    bladder: '退院時FIM排尿管理',
+    bowel: '退院時FIM排便管理',
+    trans_bed: '退院時FIMベッド移乗',
+    trans_toile: '退院時FIMトイレ移乗',
+    trans_bath: '退院時FIM浴槽移乗',
+    gait: '退院時FIM歩行',
+  },
+  // 退院時FIM認知機能項目（5項目）
+  dischargeCognitive: {
+    comp: '退院時FIM理解',
+    express: '退院時FIM表出',
+    social: '退院時FIM社会的交流',
+    problem: '退院時FIM問題解決',
+    memory: '退院時FIM記憶',
+  },
+};
+
+// CSVファイルを読み込む関数
+function loadCSVData() {
+  try {
+    if (!fs.existsSync(csvFilePath)) {
+      console.warn(`⚠️  CSVファイルが見つかりません: ${csvFilePath}`);
+      return;
+    }
+
+    // ファイルをバイナリとして読み込む
+    const buffer = fs.readFileSync(csvFilePath);
+    // Shift-JISからUTF-8に変換
+    const unicodeArray = Encoding.convert(buffer, {
+      to: 'UNICODE',
+      from: 'SJIS',
+    });
+    const content = Encoding.codeToString(unicodeArray);
+
+    // CSVを手動でパース
+    const lines = content.split('\n').filter((line) => line.trim() !== '');
+    if (lines.length === 0) {
+      console.warn('CSVファイルが空です');
+      return;
+    }
+
+    // ヘッダー行を取得
+    const headers = lines[0].split(',').map((h) => h.trim());
+
+    // データ行をパース
+    const records = [];
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(',').map((v) => v.trim());
+      if (values.length !== headers.length) continue;
+
+      const record = {};
+      headers.forEach((header, index) => {
+        record[header] = values[index];
+      });
+      records.push(record);
+    }
+
+    csvData = records.map((row) => {
+      const record = {};
+      // 数値に変換
+      record.gender = parseInt(row[CSV_COLUMN_MAPPING.gender]) || 0;
+      record.age = parseFloat(row[CSV_COLUMN_MAPPING.age]) || 0;
+      record.bmi = parseFloat(row[CSV_COLUMN_MAPPING.bmi]) || 0;
+      record.careLevel = parseInt(row[CSV_COLUMN_MAPPING.careLevel]) || 0;
+      record.daysFromOnset = parseFloat(row[CSV_COLUMN_MAPPING.daysFromOnset]) || 0;
+
+      // 入院時FIM値
+      record.admissionMotion = {};
+      record.admissionCognitive = {};
+      Object.keys(CSV_COLUMN_MAPPING.admissionMotion).forEach((key) => {
+        const colName = CSV_COLUMN_MAPPING.admissionMotion[key];
+        record.admissionMotion[key] = parseFloat(row[colName]) || 0;
+      });
+      Object.keys(CSV_COLUMN_MAPPING.admissionCognitive).forEach((key) => {
+        const colName = CSV_COLUMN_MAPPING.admissionCognitive[key];
+        record.admissionCognitive[key] = parseFloat(row[colName]) || 0;
+      });
+
+      // 退院時FIM値
+      record.dischargeMotion = {};
+      record.dischargeCognitive = {};
+      Object.keys(CSV_COLUMN_MAPPING.dischargeMotion).forEach((key) => {
+        const colName = CSV_COLUMN_MAPPING.dischargeMotion[key];
+        record.dischargeMotion[key] = parseFloat(row[colName]) || 0;
+      });
+      Object.keys(CSV_COLUMN_MAPPING.dischargeCognitive).forEach((key) => {
+        const colName = CSV_COLUMN_MAPPING.dischargeCognitive[key];
+        record.dischargeCognitive[key] = parseFloat(row[colName]) || 0;
+      });
+
+      return record;
+    });
+
+    console.log(`✅ CSVデータを読み込みました: ${csvData.length}件`);
+  } catch (error) {
+    console.error('CSVファイルの読み込みエラー:', error);
+    csvData = [];
+  }
+}
+
+// CSVモードが有効な場合は、起動時にCSVデータを読み込む
+if (USE_CSV_MODE) {
+  loadCSVData();
+}
+
+// 入力データに最も近いCSVデータを見つける関数
+function findClosestCSVRecord(inputData) {
+  if (csvData.length === 0) {
+    return null;
+  }
+
+  let minDistance = Infinity;
+  let closestRecord = null;
+
+  // 入力データを正規化
+  const inputGender = inputData.gender === 'male' ? 0 : 1;
+  const inputCareLevel = inputData.careLevel === 'yes' ? 1 : 0;
+
+  csvData.forEach((record) => {
+    // 距離を計算（ユークリッド距離の重み付き版）
+    let distance = 0;
+
+    // 個人情報の距離
+    distance += Math.pow((record.gender - inputGender) * 10, 2);
+    distance += Math.pow((record.age - inputData.age) / 10, 2);
+    distance += Math.pow((record.bmi - inputData.bmi) / 5, 2);
+    distance += Math.pow((record.careLevel - inputCareLevel) * 10, 2);
+    distance += Math.pow((record.daysFromOnset - inputData.daysFromOnset) / 10, 2);
+
+    // 入院時FIM値の距離
+    Object.keys(inputData.motionValues).forEach((key) => {
+      const diff = (record.admissionMotion[key] || 0) - (inputData.motionValues[key] || 0);
+      distance += Math.pow(diff, 2);
+    });
+    Object.keys(inputData.cognitiveValues).forEach((key) => {
+      const diff = (record.admissionCognitive[key] || 0) - (inputData.cognitiveValues[key] || 0);
+      distance += Math.pow(diff, 2);
+    });
+
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestRecord = record;
+    }
+  });
+
+  return closestRecord;
+}
 
 // ミドルウェア
 app.use(cors());
@@ -75,7 +271,7 @@ setInterval(async () => {
   rAPIAvailable = await checkRAPI();
 }, 30000);
 
-// 予測値計算API（R FastAPIを使用）
+// 予測値計算API（R FastAPIまたはCSVデータを使用）
 app.post('/api/predict', async (req, res) => {
   try {
     const inputData = req.body;
@@ -87,8 +283,45 @@ app.post('/api/predict', async (req, res) => {
 
     let prediction = null;
 
+    // CSVモードが有効な場合
+    if (USE_CSV_MODE) {
+      const closestRecord = findClosestCSVRecord(inputData);
+      if (closestRecord) {
+        // 退院時FIM値を予測結果として返す
+        const motionArray = Object.keys(CSV_COLUMN_MAPPING.dischargeMotion).map(
+          (key) => closestRecord.dischargeMotion[key] || 0
+        );
+        const cognitiveArray = Object.keys(CSV_COLUMN_MAPPING.dischargeCognitive).map(
+          (key) => closestRecord.dischargeCognitive[key] || 0
+        );
+
+        const motionTotal = motionArray.reduce((sum, val) => sum + val, 0);
+        const cognitiveTotal = cognitiveArray.reduce((sum, val) => sum + val, 0);
+        const total = motionTotal + cognitiveTotal;
+
+        prediction = {
+          motion: Object.keys(CSV_COLUMN_MAPPING.dischargeMotion).reduce((obj, key, index) => {
+            obj[key] = motionArray[index];
+            return obj;
+          }, {}),
+          cognitive: Object.keys(CSV_COLUMN_MAPPING.dischargeCognitive).reduce((obj, key, index) => {
+            obj[key] = cognitiveArray[index];
+            return obj;
+          }, {}),
+          motionTotal,
+          cognitiveTotal,
+          total,
+        };
+
+        console.log('CSVデータから予測結果を取得しました');
+      } else {
+        return res.status(503).json({
+          error: 'CSVデータが見つかりません。CSVファイルを確認してください。',
+        });
+      }
+    }
     // R FastAPIが利用可能な場合
-    if (rAPIAvailable) {
+    else if (rAPIAvailable) {
       try {
         const response = await axios.post(
           `${R_API_URL}/predict`,
@@ -140,10 +373,13 @@ app.post('/api/predict', async (req, res) => {
         });
       }
     } else {
-      return res.status(503).json({ 
-        error: 'R FastAPIが利用できません。R FastAPIサーバーを起動してください。',
-        hint: 'python r_api/predict_api_fastapi.py'
-      });
+      // CSVモードでもR FastAPIでもない場合
+      if (!USE_CSV_MODE) {
+        return res.status(503).json({ 
+          error: 'R FastAPIが利用できません。R FastAPIサーバーを起動してください。',
+          hint: 'python r_api/predict_api_fastapi.py\nまたは、環境変数 USE_CSV_MODE=true を設定してCSVモードを使用してください。'
+        });
+      }
     }
 
     // データベースに保存
@@ -397,15 +633,26 @@ app.listen(PORT, HOST, () => {
   console.log(`\n📊 APIエンドポイント:`);
   console.log(`   http://${localIP}:${PORT}/api/data`);
   console.log(`   http://${localIP}:${PORT}/api/stats`);
-  console.log(`\n🔬 R FastAPI:`);
-  console.log(`   URL: ${R_API_URL}`);
-  console.log(`   ステータス: ${rAPIAvailable ? '✅ 接続済み' : '❌ 未接続'}`);
-  if (rAPIAvailable) {
-    console.log(`   APIドキュメント: ${R_API_URL}/docs`);
+  console.log(`\n🔬 予測モード:`);
+  if (USE_CSV_MODE) {
+    console.log(`   ✅ CSVモード: 有効`);
+    console.log(`   CSVファイル: ${csvFilePath}`);
+    console.log(`   読み込み済みデータ: ${csvData.length}件`);
+    if (csvData.length === 0) {
+      console.log(`   ⚠️  CSVデータが読み込まれていません。ファイルを確認してください。`);
+    }
   } else {
-    console.log(`   ⚠️  R FastAPIを起動してください: python3 r_api/predict_api_fastapi.py`);
-    console.log(`   （Windowsの場合は: python r_api/predict_api_fastapi.py）`);
+    console.log(`   🔬 R FastAPIモード: 有効`);
+    console.log(`   URL: ${R_API_URL}`);
+    console.log(`   ステータス: ${rAPIAvailable ? '✅ 接続済み' : '❌ 未接続'}`);
+    if (rAPIAvailable) {
+      console.log(`   APIドキュメント: ${R_API_URL}/docs`);
+    } else {
+      console.log(`   ⚠️  R FastAPIを起動してください: python3 r_api/predict_api_fastapi.py`);
+      console.log(`   （Windowsの場合は: python r_api/predict_api_fastapi.py）`);
+    }
   }
+  console.log(`   💡 CSVモードを無効にする場合: USE_CSV_MODE=false npm run server`);
   console.log(`\n⚠️  スマホとPCが同じWi-Fiネットワークに接続されている必要があります`);
   console.log('========================================\n');
 });
